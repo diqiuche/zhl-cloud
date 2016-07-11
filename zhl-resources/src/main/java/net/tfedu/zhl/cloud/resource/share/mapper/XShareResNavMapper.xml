@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.tfedu.zhl.cloud.resource.share.dao.XShareResNavMapper">
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.share.entity.XShareResNav">
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor>
+      <idArg column="id" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="resId" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="structCode" javaType="java.lang.String" jdbcType="VARCHAR" />
+      <arg column="codeType" javaType="java.lang.Integer" jdbcType="INTEGER" />
+      <arg column="flag" javaType="java.lang.Boolean" jdbcType="BIT" />
+    </constructor>
+  </resultMap>
+</mapper>

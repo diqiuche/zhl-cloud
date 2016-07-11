@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.school.dao.JSchoolMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.school.entity.JSchool" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="districtId" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="name" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="MasterPhone" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="OfficePhone" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Fax" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Address" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="CreateDate" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="PostNo" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Remark" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Brief" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="PicPath" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+  </resultMap>
+  
+  <resultMap id="resultSchool" type="net.tfedu.zhl.sso.school.entity.JSchoolEntity">
+       <result column="sch_id" property="sch_id" />
+       <result column="sch_name" property="sch_name" />
+  </resultMap>
+  
+  <!-- 查询区下的所有学校 -->
+  <select id="querySchoolByDistrictId" resultMap="resultSchool">
+      select sch_id,sch_name from ( select id as sch_id ,name as  sch_name from j_school where districtId=#{districtId} and flag=0 )a 
+  </select>
+  
+  <select id="querySchoolByDistrictIdAndName" resultMap="BaseResultMap">
+  	select * from j_school  where districtId = 17 and flag =false and name = '张家口十二中学' ORDER BY id
+  </select>
+</mapper>

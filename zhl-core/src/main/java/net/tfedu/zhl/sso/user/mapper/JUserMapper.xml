@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.user.dao.JUserMapper" >
+  <resultMap id="userMap" type="net.tfedu.zhl.sso.user.entity.JUser" >
+
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="name" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="RoleId" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="ChannelId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="ChannelLimit" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="LoginTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="LogoutTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="SchoolId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="TrueName" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="NickName" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="IsSee" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="Male" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="webLoginTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="webLogoutTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="forumLastSeeTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="qaLastSeeTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="studyTermId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="status" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="lastTipId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="grade" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="isFirstLogin" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+    
+    <result column="subjectIds" property="subjectIds" javaType="java.lang.String"/>
+    <result column="subjectNames" property="subjectNames" javaType="java.lang.String"/>
+    <result column="roleName" property="roleName" javaType="java.lang.String"/>
+    <result column="schoolName" property="schoolName" javaType="java.lang.String"/>
+    <result column="termId" property="termId" javaType="java.lang.Long" />
+    <result column="termName" property="termName" javaType="java.lang.String"/>
+  </resultMap>
+  
+  
+  <resultMap id="userMapSimple" type="net.tfedu.zhl.sso.user.entity.UserSimple" >
+  	<id column="userId" property="userId" javaType="java.lang.Long" jdbcType="BIGINT"/>
+    <result column="userName" property="userName" javaType="java.lang.String" jdbcType="CHAR" />
+    <result column="trueName" property="trueName" javaType="java.lang.String" jdbcType="CHAR" />
+    <result column="userImage" property="userImage" javaType="java.lang.String" jdbcType="CHAR" />
+    <result column="male" property="male" javaType="java.lang.String" jdbcType="CHAR" />
+    <result column="subjectIds" property="subjectIds" javaType="java.lang.String" />
+    <result column="subjectNames" property="subjectNames" javaType="java.lang.String" />
+    <result column="roleName" property="roleName" javaType="java.lang.String" jdbcType="CHAR" />
+    <result column="schoolName" property="schoolName" javaType="java.lang.String" jdbcType="CHAR" />
+    <result column="termName" property="termName" javaType="java.lang.String" jdbcType="CHAR" />
+  
+  </resultMap>
+  
+  <!-- 题库对接，根据user_name，查询对应的用户信息 -->
+  <resultMap id="usersMap" type="net.tfedu.zhl.sso.user.entity.UsersEntity" >
+       <result column="user_id" property="user_id" />
+       <result column="user_name" property="user_name" />
+       <result column="user_true_name" property="user_true_name" />
+       <result column="user_image" property="user_image" />
+       <result column="sch_id" property="sch_id" />
+       <result column="sch_name" property="sch_name" />
+       <result column="dist_id" property="dist_id" />
+       <result column="dist_name" property="dist_name" />
+       <result column="term_id" property="term_id" />
+       <result column="term_name" property="term_name" />
+       <result column="subj_id" property="subj_id" />
+       <result column="subj_name" property="subj_name" />
+  </resultMap>
+  
+	<select id="getUserByName" parameterType="String" resultMap="userMap">
+		select u.Id,u.name,u.RoleId,u.ChannelId,u.ChannelLimit,u.LoginTime,u.LogoutTime,u.SchoolId,u.TrueName,u.NickName,u.IsSee,u.Male,u.Flag,u.webLoginTime,u.webLogoutTime
+		,u.forumLastSeeTime,u.qaLastSeeTime,u.studyTermId,u.status,u.lastTipId,u.grade,u.isFirstLogin
+		,r.Name as roleName,t.Id as termId,t.Name as termName,
+		s.name as schoolName,GROUP_CONCAT(su.id) as subjectIds,GROUP_CONCAT(su.name)as subjectNames
+		from j_user u
+		LEFT JOIN j_role r on r.id = u.RoleId
+		LEFT JOIN j_userterm ut on ut.UserId = u.id
+		LEFT JOIN j_term t on t.id = ut.TermId
+		LEFT JOIN j_school s on s.id = u.SchoolId
+		LEFT JOIN j_teachersubject ts on ts.userid = u.Id  and ts.flag = false 
+  		LEFT JOIN j_subject su on su.id = ts.SubjectId and su.flag = false 
+		where u.name = #{name}
+		and r.flag  =false and ut.flag = false and t.flag = false 
+	</select>
+
+  
+  
+  
+	<select id="getUserById" parameterType="Long" resultMap="userMap" >
+		select u.Id,u.name,u.RoleId,u.ChannelId,u.ChannelLimit,u.LoginTime,u.LogoutTime,u.SchoolId,u.TrueName,u.NickName,u.IsSee,u.Male,u.Flag,u.webLoginTime,u.webLogoutTime
+		,u.forumLastSeeTime,u.qaLastSeeTime,u.studyTermId,u.status,u.lastTipId,u.grade,u.isFirstLogin
+		,r.Name as roleName,t.Id as termId,t.Name as termName,
+		s.name as schoolName,GROUP_CONCAT(su.id) as subjectIds,GROUP_CONCAT(su.name)as subjectNames		
+		from j_user u	
+		LEFT JOIN j_role r on r.id = u.RoleId
+		LEFT JOIN j_userterm ut on ut.UserId = u.id
+		LEFT JOIN j_term t on t.id = ut.TermId
+		LEFT JOIN j_school s on s.id = u.SchoolId
+		LEFT JOIN j_teachersubject ts on ts.userid = u.Id  and ts.flag = false 
+  		LEFT JOIN j_subject su on su.id = ts.SubjectId and su.flag = false 
+		where u.id = #{id}
+		and r.flag  =false and ut.flag = false and t.flag = false 
+	</select>
+  
+  
+  
+  <select id="getUserSimpleById" parameterType="Long" resultMap="userMapSimple">
+  		select u.Id as userId ,u.roleId,
+     	u.name as userName,
+      	u.trueName,
+    	IF(u.male=1,'女','男')male,
+		r.Name as roleName,
+    	t.Name as termName,
+		s.name as schoolName,
+		ui.UserImage as userImage,
+		GROUP_CONCAT(su.id) as subjectIds,
+		GROUP_CONCAT(su.name)as subjectNames		
+		from j_user u	
+		LEFT JOIN j_userinfo ui on ui.userid = u.id
+		LEFT JOIN j_role r on r.id = u.RoleId
+		LEFT JOIN j_userterm ut on ut.UserId = u.id
+		LEFT JOIN j_term t on t.id = ut.TermId
+		LEFT JOIN j_school s on s.id = u.SchoolId
+		LEFT JOIN j_teachersubject ts on ts.userid = u.Id  
+  		LEFT JOIN j_subject su on su.id = ts.SubjectId 
+		where u.id =#{id}
+		and r.flag  =false and u.flag = false and ts.flag = false and su.flag = false    
+  </select>
+  
+  
+    
+  <select id="getUserSimpleByName" parameterType="String" resultMap="userMapSimple">
+  		select u.Id as userId ,u.roleId,
+     	u.name as userName,
+      	u.trueName,
+    	IF(u.male=1,'男','女')male,
+		r.Name as roleName,
+    	t.Name as termName,
+		s.name as schoolName,
+		ui.UserImage as userImage,
+		GROUP_CONCAT(su.id) as subjectIds,
+		GROUP_CONCAT(su.name)as subjectNames		
+		from j_user u	
+		LEFT JOIN j_userinfo ui on ui.userid = u.id
+		LEFT JOIN j_role r on r.id = u.RoleId
+		LEFT JOIN j_userterm ut on ut.UserId = u.id
+		LEFT JOIN j_term t on t.id = ut.TermId
+		LEFT JOIN j_school s on s.id = u.SchoolId
+		LEFT JOIN j_teachersubject ts on ts.userid = u.Id 
+  		LEFT JOIN j_subject su on su.id = ts.SubjectId and
+		where u.name =#{name}
+		and r.flag  =false and u.flag = false
+  </select>
+  
+  
+  <update id="updateUserImage">
+  	update  j_userinfo set UserImage = #{1} where userid =#{0} 
+  </update>
+  
+  <select id="getUserAreaInfo"  resultType="java.util.HashMap">
+  	SELECT schoolid,s.districtid from  j_user u
+	LEFT JOIN j_school s on s.id = u.SchoolId
+	where u.id = #{0} 
+  </select>
+  
+  
+  
+  <select id="getUserTermAndSubject" parameterType="Long" resultType="java.util.HashMap">
+  	select m.code as termcode , GROUP_CONCAT(s.code) as subjectcode from j_user u 
+	left join j_userterm um on um.userid = u.id 
+	LEFT JOIN j_term m on m.id = um.termid 
+	LEFT JOIN j_teachersubject ts on ts.UserId = u.id 
+	LEFT JOIN j_subject s on s.id = ts.SubjectId 
+	where u.id = #{userId}  and um.flag = false and u.flag = false and ts.flag =false and s.flag = false 
+  </select>
+  
+  <!-- 题库对接，根据name查询用户信息  -->
+  <select id="queryUserBasicInfo" resultMap="usersMap">
+  select user_id,user_name,user_true_name,user_image,sch_id,sch_name,dist_id,dist_name,term_id,term_name,subj_id,subj_name
+  from 
+  (select u.id as user_id,u.name as user_name,u.trueName as user_true_name,ui.userImage as user_image 
+  ,u.schoolId as sch_id,d.id as dist_id ,d.name as dist_name,s.name as sch_name,t.id as term_id,t.name as term_name 
+  ,st.id as subj_id,st.name as subj_name 
+  from j_user u left join j_userinfo ui on u.id=ui.userid
+  left join j_school s on u.schoolId=s.id 
+  left join q_district d on s.districtId=d.id 
+  left join j_userterm ut on u.id=ut.userId 
+  left join j_term t on ut.termId=t.id
+  left join j_term_subject ts on t.id=ts.termId
+  left join j_subject st on ts.subjectId=st.id
+  where u.flag=0 and u.name = #{userName}
+  ) a  
+  </select>
+  
+  <!-- 根据userId查询用户的truename -->
+  <select id="getTrueNameById" resultType="java.lang.String">
+     select truename from j_user where id = #{userId}
+  </select>
+  
+  
+  
+  <resultMap type="net.tfedu.zhl.sso.user.entity.JUserTeachingQueryEntity" 
+  														id="teachingQueryResultEntity">
+  	<id column="id" property="id"/>
+  	<result column="name" property="name"/>
+  	<result column="truename" property="trueName"/>
+  	<result column="schoolname" property="schoolName"/>
+  	<result column="districtname" property="districtName"/>
+  	<result column="cityname" property="cityName"/>
+  	<result column="provincename" property="provinceName"/>
+  	<result column="male" property="male"/>
+  	<result column="rolename" property="roleName"/>
+  </resultMap>
+  
+  <!-- JUserTeachingQueryEntity 根据角色、姓名分页获取用户列表 -->
+  <select id="queryUserWithRoleAndName" resultMap="teachingQueryResultEntity">
+	select
+	id,name,truename,schoolname,districtname,cityname,provincename,male
+	,if(LENGTH(GROUP_CONCAT(addrolenams1,addrolenams2))>0,GROUP_CONCAT(addrolenams1,addrolenams2),rolename)
+	as rolename
+	from (
+	SELECT u.id,u.name,u.truename,s.name as schoolname,qt.Name as
+	districtname,qc.name as cityname
+	,qp.Name as provincename,u.male,r.name as rolename
+	,(select IFNULL(GROUP_CONCAT(r.name),'') from j_userrole ur LEFT JOIN j_role r
+	on r.id = ur.RoleId where ur.userid = u.id and (r.model=' ' or
+	r.model=#{model}) )as addrolenams1
+	,(select IFNULL(GROUP_CONCAT(r.name),'') from r_groupuser ug LEFT JOIN
+	j_rolegroup rg on rg.group_id = ug.GroupId LEFT JOIN j_role r on r.id =
+	rg.role_id where u.id=ug.userId and (r.model=' ' or r.model=#{model})
+	)as addrolenams2
+	FROM
+	j_user u
+	LEFT JOIN j_school s on s.id =u.SchoolId
+	LEFT JOIN q_district qt ON qt.Id = s.districtid
+	LEFT JOIN q_city qc on qc.id = qt.CityId
+	LEFT JOIN q_province qp on qp.id =qc.ProvinceId
+	LEFT JOIN j_role r on r.id = u.roleid
+	WHERE
+	u.flag = FALSE and (r.model=' ' or r.model= #{model})
+	<if test=" name!=null and name!='' and name!='null'  and name!='%%' ">
+		AND (
+		u.TrueName LIKE #{name}
+		OR u. NAME LIKE #{name}
+		)
+	</if>
+	and u.RoleId = 2
+	<if test=" roleId >0 ">
+		and EXISTS
+		(
+		select r.id from j_role r where r.id = u.roleid and (r.model=' ' or
+		r.model=#{model}) and r.id =#{roleId}
+		union all
+		select ur.id from j_userrole ur
+		LEFT JOIN j_role r on r.id = ur.RoleId
+		where ur.userid= u.id and (r.model=' ' or r.model=#{model}) and r.id =
+		#{roleId}
+		union all
+		select ug.id from r_groupuser ug
+		LEFT JOIN j_rolegroup rg on rg.group_id = ug.GroupId
+		LEFT JOIN j_role r on rg.role_id=r.id
+		where ug.userid = u.id and (r.model=' ' or r.model=#{model}) and r.id
+		=#{roleId}
+		)
+	</if>
+	)final_table group by name ORDER BY name,truename
+  </select>
+</mapper>

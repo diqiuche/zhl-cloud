@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.teaching.teachCases.dao.TContentsMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.teaching.teachCases.entity.TContents" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="contentType" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="thumbnailpath" jdbcType="VARCHAR" javaType="java.lang.String" />
+    </constructor>
+  </resultMap>
+  
+  <!-- 查询所有的内容类型 -->
+  <select id ="getAllContentTypes" resultType="net.tfedu.zhl.cloud.teaching.teachCases.entity.TContents">
+    select id,contenttype from t_contents;
+  </select>
+</mapper>

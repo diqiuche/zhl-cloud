@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.navigation.dao.JUserDefaultMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.navigation.entity.JUserDefault" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="userId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="tfcode" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="type" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="createTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+  </resultMap>
+  
+  <!-- 根据用户历史选择结点，查询用户历史选择的学段、学科、版本、教材 -->
+   <resultMap id="HistoryResultMap" type="net.tfedu.zhl.cloud.resource.navigation.entity.JUserDefault" >
+		<id column="id" property="id" />
+		<result column="fcode" property="tfcode" />
+		<result column="termId" property="termId" />
+		<result column="subjectId" property="subjectId" />
+		<result column="editionId" property="editionId" />
+		<result column="bookId" property="bookId" />
+  </resultMap>
+  <select id="getUserHistoryDefault" parameterType="HashMap" resultMap="HistoryResultMap">
+		select sys.id,sys.tfcode fcode,sys.TermId TermId,sys.SubjectId SubjectId, 
+        (select edi.id from j_syscourse edi where edi.termid = TermId and edi.subjectid = SubjectId and flag = false and pnodeid = 0 and LOCATE(edi.tfcode,fcode) > 0 )editionId,
+        (select book.id from j_syscourse book where book.pnodeid = editionId and flag = false and LOCATE(book.tfcode,fcode) > 0 )bookid 
+        from j_syscourse_user_default ude 
+        LEFT JOIN j_syscourse sys on sys.TFcode = ude.tfcode 
+        where ude.userId = #{userId} and ude.type = #{type} and ude.flag = false 
+  </select>
+  <!-- 增加用户历史选择 记录 -->
+   <insert id="addUserHistoryDefault" parameterType="HashMap" useGeneratedKeys="true" keyProperty="id">
+        insert into j_syscourse_user_default(userId,tfcode,type,createtime,flag) values(#{userId},#{tfcode},#{type},now(),false)
+   </insert>
+   <!-- 更新用户历史选择 记录 -->
+   <update id="updateUserHistoryDefault" parameterType="HashMap" >
+        update j_syscourse_user_default set tfcode = #{tfcode} where userId = #{userId} and type = #{type} and flag = false
+   </update>
+
+</mapper>

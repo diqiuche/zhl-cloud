@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.asset.dao.ZAssetSyscourseMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.asset.entity.ZAssetSyscourse" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="assetid" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="tfcode" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+  </resultMap>
+  
+  <!-- 根据resId，查询所在的第一个课程结点   -->
+  <select id="getFirstCourseByResId" resultType="String">
+     select tfcode from z_asset_syscourse where assetid = #{resId} and flag = 0 limit 1
+  </select>
+  
+  
+  <!-- 获取自建的共享范围 -->
+  <select id="getAssetShareScope" resultType="Integer">
+  	SELECT s.sharescope from z_asset a
+	LEFT JOIN z_asset_syscourse s on s.assetid = a.id 
+	WHERE a.userid = #{userId} and a.AssetPath = #{assetPath}
+	ORDER BY s.id limit 1 
+  </select>
+  
+  
+  <!--  更新资源的 节点  -->
+  <update id="updateAssetSyscourse">
+  	update  z_asset_syscourse set  tfcode=#{tfcode},sharescope=#{scope}
+	where id = (SELECT id from ( SELECT MIN(id) as id  from z_asset_syscourse where assetid =#{resId} and flag =false )ttttt)
+  </update>
+</mapper>

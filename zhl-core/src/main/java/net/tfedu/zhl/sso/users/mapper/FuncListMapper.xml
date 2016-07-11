@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.users.dao.FuncListMapper">
+	<resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.users.entity.FuncList">
+		<!-- WARNING - @mbggenerated -->
+		<constructor>
+			<idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+			<arg column="MenuId" jdbcType="BIGINT" javaType="java.lang.Long" />
+			<arg column="Name" jdbcType="CHAR" javaType="java.lang.String" />
+			<arg column="FuncDesc" jdbcType="CHAR" javaType="java.lang.String" />
+			<arg column="Path" jdbcType="CHAR" javaType="java.lang.String" />
+			<arg column="Area" jdbcType="CHAR" javaType="java.lang.String" />
+			<arg column="FuncType" jdbcType="CHAR" javaType="java.lang.String" />
+			<arg column="IsBase" jdbcType="BIT" javaType="java.lang.Boolean" />
+			<arg column="IsFree" jdbcType="BIT" javaType="java.lang.Boolean" />
+			<arg column="IsEnabled" jdbcType="BIT" javaType="java.lang.Boolean" />
+			<arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+			<arg column="pid" jdbcType="BIGINT" javaType="java.lang.Long" />
+			<arg column="iconPath" jdbcType="CHAR" javaType="java.lang.String" />
+			<arg column="model" jdbcType="VARCHAR" javaType="java.lang.String" />
+			<arg column="tag" jdbcType="BIT" javaType="java.lang.Boolean" />
+		</constructor>
+	</resultMap>
+
+	<select id="getRoleFuncByRoleIds" resultType="String">
+		SELECT f.Path
+		from j_roleconfig rc
+		LEFT JOIN j_funclist f on rc.FuncId=f.id
+		where f.model=#{model} and rc.RoleId in
+		<foreach collection="roleIds" item="item" index="index" open="("
+			separator="," close=")">#{item}</foreach>
+	</select>
+</mapper>

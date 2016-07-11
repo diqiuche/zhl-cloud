@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.teaching.videoCourses.dao.TVideoResourcesMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.teaching.videoCourses.entity.TVideoResources" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor>
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="title" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="playtime" jdbcType="INTEGER" javaType="java.lang.Double" />
+      <arg column="speakerinfo" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="clicktimes" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="fromflag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="typeId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="subjectId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="fname" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="thumbnailpath" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="creator" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="createDate" jdbcType="DATE" javaType="java.util.Date" />
+      <arg column="updateDate" jdbcType="DATE" javaType="java.util.Date" />
+      <arg column="flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="description" jdbcType="LONGVARCHAR" javaType="java.lang.String" />
+    </constructor>
+  </resultMap>
+  
+  <!-- 分页查询视频课程  -->
+  <select id="getAllVideoCourses" resultType="net.tfedu.zhl.cloud.teaching.videoCourses.entity.TVideoResources">
+  select id,title,speakerinfo,description,playtime,clicktimes,fname,typeid,subjectid,fromflag,
+  (select AVG(score) as avgScore from t_videocomments where userId = #{userId} and videoId = a.id and isScore = 1 and flag = 0) as avgScore,
+  (select count(id) as count from t_viewedvideos where videoId = a.id and userId = #{userId}) as hasVisited,thumbnailpath
+  
+  from t_videoresources a 
+  where fromflag = #{fromFlag} and typeId = #{typeId} and subjectId = #{subjectId} and flag = 0
+  <if test="orderBy == 0">
+     order by a.playtime
+  </if>
+  
+  <if test="orderBy == 1">
+     order by a.playtime desc
+  </if>
+  
+  <if test="orderBy == 2">
+     order by a.clicktimes desc
+  </if>
+  
+  <if test="orderBy == 3">
+     order by avgScore desc
+  </if>
+  </select>
+  
+  <!-- 根据所属平台、类型，查询视频课程数量 -->
+  <select id="getVideoNums" resultType="Integer">
+     select count(id) from t_videoresources where fromflag = #{fromFlag} and typeid = #{typeId} and flag = 0
+  </select>
+  
+  <!-- 根据所属平台，查询视频课程数量 -->
+  <select id="getVideoNumsByFromflag" resultType="Integer">
+     select count(id) from t_videoresources where fromflag = #{fromFlag} and flag = 0
+  </select>
+  
+  <!-- 预览一条视频课程 -->
+  <select id="getOneVideoCourse" resultType="net.tfedu.zhl.cloud.teaching.videoCourses.entity.VideoPreviewEntity">
+     select id,title,(select score from t_videocomments where userId = #{userId} and videoId = #{videoId} and isScore = 1 and flag = 0) as score,fname,thumbnailpath
+     from t_videoresources where id = #{videoId}
+  </select>
+  
+  <!-- 新增一条视频课程  -->
+  <insert id="insertOneVideoCourse">
+    insert into t_videoresources(title,speakerinfo,description,typeid,subjectid,fromflag,thumbnailpath,fname,playtime,creator,createDate,updateDate) values(#{videoCourse.title},#{videoCourse.speakerinfo},#{videoCourse.description},#{videoCourse.typeid},
+    #{videoCourse.subjectid},#{videoCourse.fromflag},#{videoCourse.thumbnailpath},#{videoCourse.fname},#{videoCourse.playtime},#{videoCourse.creator},now(),now())
+  </insert>
+  
+  <!-- 编辑一条视频课程  -->
+  <update id="editOneVideoCourse">
+     update t_videoresources set title = #{videoCourse.title},speakerinfo = #{videoCourse.speakerinfo},description = #{videoCourse.description},typeid = #{videoCourse.typeid},
+     subjectid = #{videoCourse.subjectid},fromflag = #{videoCourse.fromflag},thumbnailpath = #{videoCourse.thumbnailpath},creator = #{videoCourse.creator},updateDate = now()
+     where id = #{videoCourse.id}
+  </update>
+  
+  
+  <!-- 批量删除视频课程  -->
+  <update id="delVideoCourses">
+     update t_videoresources set flag = 1 where id in
+     <foreach item="item" index="index" collection="ids" 
+              open="(" separator="," close=")">
+              #{item}
+     </foreach>
+  </update>
+  
+  <!-- 根据预览的一条视频课程，查询其所属平台、类型、学科 -->
+  <select id="selectFromflagOfOneVideo" resultType="java.util.HashMap">
+    select fromflag,typeid,subjectid from t_videoresources where id = #{id}
+  </select>
+  
+  <!-- 视频课程的检索  -->
+  <select id="getVideoSearchResults" resultType="net.tfedu.zhl.cloud.teaching.videoCourses.entity.TVideoResources">
+   select id,title,updatedate,clicktimes,thumbnailpath,fname,
+   (select count(id) from t_videocomments where videoid = a.id and isScore = 0 and flag = 0) as commentTimes,speakerinfo,description,playtime,typeid,subjectid,fromflag
+   from t_videoresources a
+   where fromflag = #{fromFlag} and flag = 0
+   
+   <if test="keyWord != null and keyWord != '' ">
+       and (title like CONCAT('%',#{keyWord},'%') or description like CONCAT('%',#{keyWord},'%'))
+   </if>
+   
+   <if test="orderBy == 0">
+     order by a.createDate
+  </if>
+  <if test="orderBy == 1">
+     order by a.createDate desc
+  </if>
+  <if test="orderBy == 2">
+     order by a.clicktimes desc
+  </if>
+  <if test="orderBy == 3">
+     order by commentTimes desc
+  </if>
+  </select>
+  
+  <!-- 增加一个视频课程的浏览记录  -->
+  <insert id="addOneVisitedItem">
+    insert into t_viewedvideos(userid,videoid,createDate) values (#{userId},#{videoId},now())
+  </insert>
+</mapper>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.term.dao.JTermMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.term.entity.JTerm" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="Name" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Notes" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="code" jdbcType="CHAR" javaType="java.lang.String" />
+    </constructor>
+  </resultMap>
+  
+  <!-- 获得所有学段，除去其他 -->
+  <resultMap id="AllTermsMap" type="net.tfedu.zhl.sso.term.entity.JTerm" >
+		<id column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="code" property="code" />
+  </resultMap>
+  <select id="getAllTerms" resultMap="AllTermsMap">
+		select id,name,code from j_term where name not like '其他%' and flag = false 
+  </select>
+  
+  <!-- 选择特定学段下的学科  -->
+  <resultMap id="SubjectResultMap" type="net.tfedu.zhl.sso.subject.entity.JSubject" >
+		<id column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="code" property="code" />
+  </resultMap>
+  <select id="getSubjectsByTerm" parameterType="Long" resultMap="SubjectResultMap">
+		select s.id,s.name,s.code
+		from j_term_subject ts 
+		left join j_subject s on s.id = ts.subjectId
+		where ts.flag = false and s.flag = false and ts.termId=#{termId} order by s.id
+  </select>
+  
+  
+  
+  <resultMap id="resultTerm" type="net.tfedu.zhl.sso.term.entity.JTermEntity">
+       <result column="term_id" property="term_id" />
+       <result column="term_name" property="term_name" />
+  </resultMap>
+  
+  <!-- 题库对接，查询所有学段 -->
+  <select id="queryTerm" resultMap="resultTerm">
+     select term_id,term_name from ( select id as term_id,name as term_name from j_term where flag=0 )a 
+  </select>
+  
+  
+  <resultMap id="resultSubjectByTerm" type="net.tfedu.zhl.sso.subject.entity.JSubjectEntity">
+       <result column="subj_id" property="subj_id" />
+       <result column="subj_name" property="subj_name" />
+  </resultMap>
+  <!-- 题库对接，查询学段下的所有学科 -->
+  <select id="querySubjectByTermId" resultMap="resultSubjectByTerm">
+     select subj_id,subj_name from ( select s.id as subj_id ,s.name subj_name from j_subject_tiku s 
+     left join j_term_subject ts on s.id=ts.subjectId
+     where ts.termId=#{termId} and s.flag=0 ) a
+
+  </select>
+</mapper>

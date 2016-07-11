@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.teaching.videoCourses.dao.TViewedVideosMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.teaching.videoCourses.entity.TViewedVideos" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="userId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="videoId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="CreateDate" jdbcType="DATE" javaType="java.util.Date" />
+    </constructor>
+  </resultMap>
+</mapper>

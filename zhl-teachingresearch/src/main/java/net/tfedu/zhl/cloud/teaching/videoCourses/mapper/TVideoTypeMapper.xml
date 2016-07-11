@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.teaching.videoCourses.dao.TVideoTypeMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.teaching.videoCourses.entity.TVideoType" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="name" jdbcType="VARCHAR" javaType="java.lang.String" />
+    </constructor>
+  </resultMap>
+  
+  <!-- 根据课程类型，查询相应的学科 -->
+  <select id="getSubjectsByType" resultType="net.tfedu.zhl.cloud.teaching.teachCases.entity.TSubject">
+     select c.id,c.name from t_videotype a
+     left join t_videotype_subject b on a.id = b.typeId
+     left join t_subject c on b.subjectId = c.id
+     where a.id = #{typeId}
+  </select>
+   
+   <!-- 查询所有的视频课程类型 -->
+  <select id="getAllTypes" resultType="net.tfedu.zhl.cloud.teaching.videoCourses.entity.TVideoType">
+     select id,name from t_videotype
+   </select>
+</mapper>

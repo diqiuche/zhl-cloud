@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.city.dao.CityMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.city.entity.City" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="ProvinceId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="name" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+  </resultMap>
+  
+  <resultMap id="resultCity" type="net.tfedu.zhl.sso.city.entity.CityEntity">
+       <result column="city_id" property="city_id" />
+       <result column="city_name" property="city_name" />
+  </resultMap>
+  <!-- 查询省份下的市信息 -->
+  <select id="queryCityByProvinceId" resultMap="resultCity">
+      select city_id,city_name from (select id as city_id ,name as city_name from q_city where provinceId=#{provinceId} and flag=0 )a 
+  </select>
+  
+  <select id="queryCityByProvinceIdANDName" resultMap="BaseResultMap">
+  	select * from q_city where name =#{name} and ProvinceId =#{provinceId}  and flag =false ORDER BY id 
+  </select>
+</mapper>

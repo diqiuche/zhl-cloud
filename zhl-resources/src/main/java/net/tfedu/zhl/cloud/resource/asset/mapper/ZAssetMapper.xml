@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.asset.dao.ZAssetMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.asset.entity.ZAsset" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="ResourceId" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="TypeId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="UserId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="CreateTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="UpdateTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="FileType" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="IsIssue" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="Notes" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Name" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="AssetPath" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="AssetDesc" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="keyWord" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="FileName" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="FilePath" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="IsSysRes" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="Attachement" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="AttachPath" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="AssetSize" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="CheckTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="CheckMan" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="CheckFlag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="StuState" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="FileCode" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="IsWjb" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="WjbName" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="IsLocal" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="iscourseware" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="IsFinished" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="unifyTypeId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="Content" jdbcType="LONGVARCHAR" javaType="java.lang.String" />
+    </constructor>
+  </resultMap>
+  
+  
+  
+  <select id="getAssetByUserIdAndPath" resultMap="BaseResultMap">
+  	  select * from z_asset where userid = #{userId} and assetpath =#{resPath} 
+  </select>
+  
+  
+  
+  <update id="updateAssetFinished">
+  	update z_asset set isfinished = 0 where userId = #{userId} and assetPath = #{resPath} 
+  </update>
+  
+  
+     <!-- 自建资源前端展示信息 -->
+   <resultMap id="viewMap" type="net.tfedu.zhl.cloud.resource.asset.entity.ZAssetView"> 		
+      <result column="resid"  property="resId" />
+      <result column="rescode"  property="resCode" />
+      <result column="title"  property="title" />
+      <result column="unifytype" property="unifyType" />
+      <result column="time"  property="time" />
+      <result column="imgpath"  property="imgPath" />
+      <result column="filesuffix" property="fileSuffix" />
+      <result column="isfinished" property="isFinished" />
+   </resultMap>
+  
+  <select id="queryMyAssets" resultMap="viewMap">
+	select  resId,rescode,title,unifytype,time,imgpath,filesuffix,isfinished from  (	 
+			select  a.id as resId,a.resourceid as rescode,a.name as title,a.createTime as time,p.id as unifyTypeId
+			,p.MType as  unifyType,a.AssetPath as imgPath ,REVERSE(LEFT(REVERSE(AssetPath),LOCATE('.',REVERSE(AssetPath))-1)) as fileSuffix
+			,a.isfinished 
+			from  z_asset a 
+			LEFT JOIN x_resourcetype p  on p.id = a.unifyTypeId		
+			where a.userid = #{userId}
+			and a.flag =false and a.FileType = 'A'
+
+ 	)temp_result 
+	where  1 =1 
+   	<if test="unifyTypeId>0">
+		and EXISTS ( select  id from x_resourcetype  where (id = #{unifyTypeId} or pid = #{unifyTypeId}>0 )and flag =false and id = temp_result.unifyTypeId )
+	</if>
+	
+	<if test=" (fileFormat !='' and fileFormat !=null and fileFormat!='全部' and fileFormat!='all') ">
+		and EXISTS (select FormatCode from j_filetypedetail where flag = false  and FileFormat =#{fileFormat} and FormatCode = CONCAT('.',temp_result.filesuffix))
+	</if>   
+	ORDER BY time desc 
+  </select>
+  
+  
+  
+  
+  
+  <!-- 重命名  -->
+  <update id="renameAsset">
+  	update z_asset  set name =#{name},UpdateTime=now() where id = #{id};
+  </update>
+  
+  
+  
+  
+       <!-- 用户的课件资源前端展示信息 -->
+   <resultMap id="courseWareViewMap" type="net.tfedu.zhl.cloud.resource.asset.entity.CourseWareView"> 		
+      <result column="resid"  property="resId" />
+      <result column="rescode"  property="resCode" />
+      <result column="title"  property="title" />
+      <result column="unifytype" property="unifyType" />
+      <result column="time"  property="time" />
+      <result column="imgpath"  property="imgPath" />
+      <result column="filesuffix" property="fileSuffix" />
+
+      <result column="updatetime"  property="updatetime" />
+      <result column="size" property="size" />
+      <result column="tfcode"  property="tfcode" />
+      <result column="tf_title" property="tf_title" />
+   </resultMap>
+  
+  
+  
+  
+  <!-- 获取用户的课件  注意time 为 updatetime  -->  
+  <select id="queryUserCourseware" resultMap="courseWareViewMap">
+  
+	select  resId,rescode,title,unifytype,time,imgpath,filesuffix,size,updatetime,tfcode,tf_title from  (	 
+			select  a.id as resId,a.resourceid as rescode,a.name as title,a.updatetime,a.createTime as time,p.id as unifyTypeId,a.assetSize  as size 
+			,p.MType as  unifyType,a.AssetPath as imgPath ,REVERSE(LEFT(REVERSE(AssetPath),LOCATE('.',REVERSE(AssetPath))-1)) as fileSuffix
+			,c.tfcode,c.name as tf_title 
+			from  z_asset a 
+			LEFT JOIN x_resourcetype p  on p.id = a.unifyTypeId
+			LEFT JOIN z_asset_syscourse  s on s.assetid = a.id
+			LEFT JOIN j_syscourse c on c.tfcode = s.tfcode 
+			where a.iscourseware = true  and a.flag =false and a.FileType = 'A'
+      and s.flag = false  
+			and a.userid = #{userId} and s.tfcode like #{tfcode} 
+			<if test="title!=''">
+			and a.name like  #{title}
+			</if>
+			
+ 	)temp_result 
+	where  1 =1 
+	<if test=" 'title'== orderby">
+		ORDER BY title desc, updatetime desc,size desc 	
+	</if>
+	
+	<if test=" 'updatetime'== orderby">
+		ORDER BY updatetime desc,title desc, size desc 		
+	</if>
+	
+	<if test=" 'size'== orderby">
+		ORDER BY  size desc ,updatetime desc,title desc		
+	</if>
+	
+	<if test=" ''== orderby or null == orderby ">
+			ORDER BY title desc, updatetime desc,size desc 	
+	</if>
+  </select>
+  
+  
+  
+  <!-- 检索用户书架教材下的全部课件  注意time 为 updatetime  -->  
+  <select id="queryUserCoursewareAll" resultMap="courseWareViewMap">
+  
+	select  resId,rescode,title,unifytype,time,imgpath,filesuffix,size,updatetime,tfcode,tf_title from  (	 
+			select  a.id as resId,a.resourceid as rescode,a.name as title,a.updatetime,a.createTime as time,p.id as unifyTypeId,a.assetSize  as size 
+			,p.MType as  unifyType,a.AssetPath as imgPath ,REVERSE(LEFT(REVERSE(AssetPath),LOCATE('.',REVERSE(AssetPath))-1)) as fileSuffix
+			,c.tfcode,c.name as tf_title 
+			from  z_asset a 
+			LEFT JOIN x_resourcetype p  on p.id = a.unifyTypeId
+			LEFT JOIN z_asset_syscourse  s on s.assetid = a.id
+			LEFT JOIN j_syscourse c on c.tfcode = s.tfcode 
+			where a.iscourseware = true  and a.flag =false and a.FileType = 'A'
+      and s.flag = false  
+			and a.userid = #{userId}
+			<if test="title!=''">
+			and a.name like  #{title}
+			</if>
+			and EXISTS (			 
+             select c1.tfcode from j_syscourse_user su LEFT JOIN j_syscourse c1 on c1.id =  su.syscourseid where su.flag =false 
+             			and su.userid =#{userId} and c1.flag = false  and locate(c1.tfcode,c.tfcode)>0 
+			)
+ 	)temp_result 
+	where  1 =1 
+	<if test=" 'title'== orderby">
+		ORDER BY title desc, updatetime desc,size desc 	
+	</if>
+	
+	<if test=" 'updatetime'== orderby">
+		ORDER BY updatetime desc,title desc, size desc 		
+	</if>
+	
+	<if test=" 'size'== orderby">
+		ORDER BY  size desc ,updatetime desc,title desc		
+	</if>
+	
+	<if test=" ''== orderby or null == orderby ">
+			ORDER BY title desc, updatetime desc,size desc 	
+	</if>
+  </select>
+  
+  
+  
+  
+	<!-- 自建资源的资源导航信息 -->
+	<select id="getAssetNavs" resultType="String">
+		select  t.tfcode  from z_asset_syscourse  t
+		LEFT JOIN j_syscourse sys on sys.tfcode = t.tfcode
+		where t.assetid = #{resId} and t.flag = false 
+		ORDER BY LOCATE(#{curTfcode},t.tfcode) desc
+	</select>
+
+	<!-- 自建资源的详细信息 -->
+	 <select id="getAssetPreviewInfo" parameterType="Long" resultType="net.tfedu.zhl.cloud.resource.resPreview.entity.ResPreviewInfo">
+			select  a.id ,a.name as title,a.keyword,AssetDesc as des ,AssetSize as fsize ,p.MType,p.id as typeId
+		    ,0 as  DLoadTimes,0 as ClickTimes,1 as fromflag, a.name as fname, a.assetpath as fpath
+			,0 as userNum,0 as totalScore,0 as avgScore,REVERSE(LEFT(REVERSE(AssetPath),LOCATE('.',REVERSE(AssetPath))-1)) as FileExt,IsWjb as isDWJ,1 as isLocal
+			from  z_asset a 
+			LEFT JOIN x_resourcetype p  on p.id = a.unifytypeid 		
+			where a.id =  #{resId}
+			and a.flag =false and a.FileType = 'A'
+	 </select>
+ 
+	 
+	<!--  查询我的备课资源中的资源类型 -->  
+	<select id="getResTypeForMyPrepareRes" parameterType="Long" 
+						resultType="net.tfedu.zhl.cloud.resource.poolTypeFormat.entity.FirstLevelResType">
+		select  p.id,p.code,p.mtype from x_resourcetype p
+		where p.flag = false and p.code in (
+			select  left(p.code,4)  from x_resourcetype p
+			where p.id in (
+				select a.unifyTypeId from j_prepare_content c
+				RIGHT JOIN j_lession_prepare l on c.preId = l.id 
+				LEFT JOIN z_asset a on a.id = c.contId 
+				where 1=1
+				and l.flag = false and l.userid = #{userId}
+				and c.flag =false  and c.conttype in (1,9)
+				and a.flag =false and a.filetype = 'A'
+				union ALL
+				select r.mtype from j_prepare_content c
+				RIGHT JOIN j_lession_prepare l on c.preId = l.id 
+				LEFT JOIN z_resource r on r.id = c.contId 
+				where 1=1
+				and l.flag = false and l.userid = #{userId}
+				and c.flag =false  and c.conttype in (2,10)
+				and r.flag= false  
+				union ALL
+				select d.mtype from j_prepare_content c
+				RIGHT JOIN j_lession_prepare l on c.preId = l.id 
+				LEFT JOIN z_districts_resource  d on d.id = c.contId 
+				where 1=1
+				and l.flag = false and l.userid = #{userId}
+				and c.flag =false  and c.conttype in (11,12)
+				and d.flag= false  
+			)
+		)
+	</select> 
+	 
+	 
+	 
+	<!--  查询我的上传中的资源类型 -->  
+	<select id="getResTypeForMyUpload" parameterType="Long" 
+						resultType="net.tfedu.zhl.cloud.resource.poolTypeFormat.entity.FirstLevelResType">
+				select  p.id,p.code,p.mtype from x_resourcetype p
+				where p.flag = false and p.code in (
+					SELECT mtypecode from 
+					(select DISTINCT (SELECT left(p.code,4) from x_resourcetype p where p.id =a.unifytypeid) as mtypecode from z_asset a 
+					where a.flag =false and a.filetype = 'A' and a.userid =#{userId} and unifytypeid >0 )t 
+					where t.mtypecode = p.code
+				)
+	</select> 
+	 
+	 
+	 <!-- 查询我的下载中的资源类型 -->  
+	<select id="getResTypeForMyDownload" parameterType="Long" 
+						resultType="net.tfedu.zhl.cloud.resource.poolTypeFormat.entity.FirstLevelResType">
+			select  p.id,p.code,p.mtype from x_resourcetype p
+			where p.flag = false and p.code in (
+			select  left(p.code,4)  from x_resourcetype p
+			where p.id in (
+			select  z.MType from z_resdown_record o
+			LEFT JOIN z_resource z on z.id = o.resId
+			where o.userid = #{userId} and o.fromflag = 0 
+			
+			union all 
+			
+			select  d.MType from z_resdown_record o
+			LEFT JOIN z_districts_resource d on d.id = o.resId
+			where o.userid = #{userId} and o.fromflag  in (3,4)
+			));
+	</select> 
+	 
+	 
+	 <!-- 查询我的最近浏览资源中的资源类型  -->  
+	<select id="getResTypeForMyView" parameterType="Long" 
+						resultType="net.tfedu.zhl.cloud.resource.poolTypeFormat.entity.FirstLevelResType">
+				select  p.id,p.code,p.mtype from x_resourcetype p
+					where p.flag = false and p.code in (
+						select  left(p.code,4)  from x_resourcetype p
+						where p.id in (
+							select  a.unifyTypeId from j_userlog  g
+							LEFT JOIN z_asset a on a.id = g.objId
+							where g.flag = false and g.userid = #{userId} and g.opertypecode = 'view'
+							and g.logtypecode = 'asset' and a.flag = false 
+							
+							union all 
+							
+							select  z.mtype from j_userlog  g
+							LEFT JOIN z_resource z on z.id = g.objId
+							where g.flag = false and g.userid = #{userId} and g.opertypecode = 'view'
+							and g.logtypecode = 'resource'  and z.flag = false 
+							
+							union all 
+							
+							select  r.mtype from j_userlog  g
+							LEFT JOIN z_districts_resource r on r.id = g.objId
+							where g.flag = false and g.userid = #{userId} and g.opertypecode = 'view'
+							and g.logtypecode in ('districtres','schoolres') and r.flag = false 
+						)
+				)
+	</select> 
+  
+  <!-- 复制一条自建资源 -->
+  <insert id="copyAsset" >
+      insert into z_asset_syscourse(assetid,tfcode,flag) VALUES(#{resId},#{des_tfcode},0);
+  </insert>
+  
+  <!-- 删除一条自建资源 -->
+  <update id="delAsset" >
+      update z_asset_syscourse set flag = 1 where assetid = #{resId} and tfcode = #{tfcode}
+  </update>
+ 
+ 
+ <resultMap type="net.tfedu.zhl.cloud.resource.asset.entity.ZAssetEditInfo" id="editInfoMap">
+ 	<id column="id" property="id"/>
+ 	<result column="title" property="title"/>
+ 	<result column="assetdesc" property="assetdesc"/>
+ 	<result column="assetpath" property="assetpath"/>
+ 	<result column="assetsize" property="assetsize"/>
+ 	<result column="keyword" property="keyword"/>
+ 	<result column="sharescope" property="sharescope"/>
+ 	<result column="tfcode" property="tfcode"/>
+ 	<result column="termid" property="termId"/>
+ 	<result column="subjectid" property="subjectId"/>
+ 	<result column="mtype" property="mtype"/>
+ 	<result column="unifytypeid" property="unifytypeId"/>
+
+
+ </resultMap>
+ 
+ <!--  准备编辑信息 -->
+ <select id="getEditInfo" parameterType="Long" resultMap="editInfoMap">
+  select a.id,a.name as title,a.assetdesc,a.assetpath,a.assetsize,p.id as unifytypeid,p.MType as mtype,
+	a.keyword as keyword,sys.sharescope,sys.tfcode,s.termid,s.subjectid
+	from z_asset a
+	LEFT JOIN z_asset_syscourse sys on sys.assetid = a.id 
+	LEFT JOIN x_resourcetype p on p.id = a.unifyTypeId 
+  LEFT JOIN j_syscourse s  on s.TFcode = sys.tfcode
+	where a.id = #{id}   and  s.flag = false 
+  ORDER BY sys.id limit  1 
+ </select>
+ 
+ 
+ 
+ <!-- 获取节点下 ， title的  用户自建资源 的所有类型 -->
+ <select id="getCourseAssetUnifyType" resultType="net.tfedu.zhl.cloud.resource.poolTypeFormat.entity.FirstLevelResType">
+	select id,code,mtype from x_resourcetype p  where p.id in (
+	select DISTINCT a.unifytypeid from z_asset a  
+	LEFT JOIN z_asset_syscourse s on s.assetid = a.id
+				where a.flag =false and a.FileType = 'A'
+	      and s.flag = false  
+				and a.userid =#{userId}  
+				and s.tfcode like #{tfcode} 
+				
+			<if test="title!=''">
+			and a.name like  #{title}
+			</if>	
+			<if test="ifGetNet = true">
+				and a.islocal = 0 
+			</if>
+						
+	)ORDER BY code 
+ </select>
+ 
+ <!--  获取当前查询条件下的资源   -->
+ <select id="getCourseAssetPage" resultType="net.tfedu.zhl.cloud.resource.prepare.entity.JPrepareContentView">
+ 	select  resId,title,1 as fromflag,unifytype,time,imgpath,filesuffix,size from  (	 
+			select  a.id as resId,a.resourceid as rescode,a.name as title,a.updatetime,a.createTime as time,p.id as unifyTypeId,a.assetSize  as size 
+			,p.MType as  unifyType,a.AssetPath as imgPath ,REVERSE(LEFT(REVERSE(AssetPath),LOCATE('.',REVERSE(AssetPath))-1)) as fileSuffix
+			,c.tfcode,c.name as tf_title 
+			from  z_asset a 
+			LEFT JOIN x_resourcetype p  on p.id = a.unifyTypeId
+			LEFT JOIN z_asset_syscourse  s on s.assetid = a.id
+			LEFT JOIN j_syscourse c on c.tfcode = s.tfcode 
+			where a.flag =false and a.FileType = 'A'
+      and s.flag = false  
+			and a.userid =#{userId} 
+			and s.tfcode like #{tfcode} 
+			<if test="title!=''">
+			and a.name like  #{title}
+			</if>	
+			<if test=" unifyTypeId>0 ">
+      		and a.unifytypeid =#{unifyTypeId}		
+			</if>
+			
+			<if test="ifGetNet = true">
+				and a.islocal = 0 
+			</if>	
+ 	)temp_result 
+ </select>
+ 
+ 
+ 
+ 
+ <!--  -->
+ <select id="selectOneByPath" resultMap="BaseResultMap">
+ 	select * from z_asset where userid = #{userId}  and AssetPath = #{path}
+ </select>
+ 
+ 
+ 
+ <update id="updateAssetPath" >
+ 	update z_asset set AssetPath =  #{newPath} where  AssetPath = #{path} 
+ </update>
+ 
+ 
+</mapper>
+
+
+
+
+
+

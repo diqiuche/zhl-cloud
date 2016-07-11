@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.resSearch.dao.ResSearchMapper" >
+        
+  <!-- 根据检索的关键词，搜索满足条件的系统资源 -->
+  <select id="getAllSysResources" resultType="net.tfedu.zhl.cloud.resource.resSearch.entity.ResSearchResultEntity" >
+    select distinct a.Id,a.ResCode,a.Title,a.Fname,a.Fpath,CONCAT(a.Fpath,'/',a.Fname) fullpath,a.thumbnailpath,b.MType MType, b.id typeId, a.FSize FSize,a.ClickTimes,a.DloadTimes,a.speaker, 
+
+	m.res_time,a.UpdateDT,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt,a.resolution,1 diskorder,a.isDWJ,jf.orderNum,b.DisplayIndex, 0 as fromFlag,
+	(SELECT ((IFNULL(sum(t.Ascore),0)+a.displayLevel)/(count(t.assetId)+1)) from z_assetevaluate t where t.assetId = a.id and t.flag = 0 and t.IsScore = 0 and t.aType = 1) avgScore
+	from z_resource a 
+	left join x_resourcetype b on a.MType = b.id and b.flag = 0 
+	left join j_filetypedetail jf on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))))=jf.FormatCode 
+	left join z_res_medium m on a.id = m.res_Id and a.Rescode = m.res_code 
+	where a.flag = 0  
+	
+	and a.fromflag in <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+                     </foreach>
+
+    <if test="format != '全部'">
+         and jf.FileFormat = #{format}
+    </if>
+
+    <if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+     </if>
+    order by id
+     
+  </select>
+  
+   <!-- 根据检索的关键词，搜索满足条件的区本、校本资源 -->
+  <select id="getAllDisResources" resultType="net.tfedu.zhl.cloud.resource.resSearch.entity.ResSearchResultEntity">
+      
+    select DISTINCT a.Id,a.ResCode,a.Title,a.Fname,a.Fpath,CONCAT(a.Fpath,'/',a.Fname) fullpath,a.thumbnailpath,b.MType MType, b.id typeId,a.Fsize Fsize,a.ClickTimes,a.DLoadTimes,a.speaker, 
+    m.res_time,a.UpdateDT,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt,a.resolution,a.isDWJ,jf.orderNum,a.isLocal,a.ScopeId,a.state,a.fromFlag,1 diskorder,
+	(SELECT ((IFNULL(sum(t.Ascore),0)+a.displayLevel)/(count(t.assetId)+1)) from  z_assetevaluate t where t.assetId = a.id and t.flag = 0 and t.IsScore = 0 and t.aType = #{fromFlag}) avgScore 
+	from z_districts_resource a 
+    left join x_resourcetype b on a.MType = b.id and b.flag = 0 
+	left join j_filetypedetail jf on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))))=jf.FormatCode
+	left join z_res_medium m on a.id = m.res_Id and a.Rescode = m.res_code 
+	where a.flag = 0 and fromFlag = #{fromFlag} 
+    <if test="format != '全部'">
+         and jf.FileFormat = #{format}
+    </if>
+    
+    <if test="fromFlag == 3">
+         and a.scopeId = #{schoolId} and a.scope = 5
+    </if>
+     <if test="fromFlag == 4">
+         and a.scopeId = #{districtId} and a.scope = 4
+    </if>
+    
+    <if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+     </if>
+    order by id
+    
+  </select>
+  
+  <!-- 查询全部资源  -->
+  <select id="getAllResources" resultType="net.tfedu.zhl.cloud.resource.resSearch.entity.ResSearchResultEntity" >
+    select distinct a.Id,a.ResCode,a.Title,a.Fname,a.Fpath,CONCAT(a.Fpath,'/',a.Fname) fullpath,a.thumbnailpath,b.MType MType, b.id typeId, a.FSize FSize,a.ClickTimes,a.DloadTimes,a.speaker, 
+	m.res_time,a.UpdateDT,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt,a.resolution,a.isDWJ,jf.orderNum,1 isLocal,0 ScopeId,1 state,b.DisplayIndex,1 diskorder, 0 as fromFlag,
+	(SELECT ((IFNULL(sum(t.Ascore),0)+a.displayLevel)/(count(t.assetId)+1)) from z_assetevaluate t where t.assetId = a.id and t.flag = 0 and t.IsScore = 0 and t.aType = 1) avgScore
+	from z_resource a 
+	left join x_resourcetype b on a.MType = b.id and b.flag = 0
+	left join j_filetypedetail jf on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))))=jf.FormatCode
+	left join z_res_medium m on a.id = m.res_Id and a.Rescode = m.res_code 
+	where a.flag = 0 
+	
+	and a.fromflag in <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+                     </foreach>
+	<if test="format != '全部'">
+         and jf.FileFormat = #{format}
+    </if>
+	<if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+    </if>
+ 
+union 
+
+  select DISTINCT a.Id,a.ResCode,a.Title,a.Fname,a.Fpath,CONCAT(a.Fpath,'/',a.Fname) fullpath,a.thumbnailpath,b.MType MType, b.id typeId,a.Fsize Fsize,a.ClickTimes,a.DLoadTimes,a.speaker, 
+  m.res_time,a.UpdateDT,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt,a.resolution,a.isDWJ,jf.orderNum,a.isLocal,a.ScopeId,a.state,0 DisplayIndex,1 diskorder,a.fromFlag,
+  (SELECT ((IFNULL(sum(t.Ascore),0)+a.displayLevel)/(count(t.assetId)+1)) from  z_assetevaluate t where t.assetId = a.id and t.flag = 0 and t.IsScore = 0 and t.aType = 3) avgScore 
+  from z_districts_resource a 
+  left join x_resourcetype b on a.MType = b.id and b.flag = 0 
+  left join j_filetypedetail jf on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))))=jf.FormatCode
+  left join z_res_medium m on a.id = m.res_Id and a.Rescode = m.res_code 
+  where a.flag = 0 and fromFlag = 3 and a.scopeId = #{schoolId} and a.scope = 5
+  <if test="format != '全部'">
+         and jf.FileFormat = #{format}
+  </if>
+  <if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+  </if>
+
+union 
+
+  select DISTINCT a.Id,a.ResCode,a.Title,a.Fname,a.Fpath,CONCAT(a.Fpath,'/',a.Fname) fullpath,a.thumbnailpath,b.MType MType, b.id typeId,a.Fsize Fsize,a.ClickTimes,a.DLoadTimes,a.speaker, 
+  m.res_time,a.UpdateDT,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt,a.resolution,a.isDWJ,jf.orderNum,a.isLocal,a.ScopeId,a.state,0 DisplayIndex,1 diskorder,a.fromFlag,
+  (SELECT ((IFNULL(sum(t.Ascore),0)+a.displayLevel)/(count(t.assetId)+1)) from  z_assetevaluate t where t.assetId = a.id and t.flag = 0 and t.IsScore = 0 and t.aType = 4) avgScore 
+  from z_districts_resource a 
+  left join x_resourcetype b on a.MType = b.id and b.flag = 0 
+  left join j_filetypedetail jf on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))))=jf.FormatCode
+  left join z_res_medium m on a.id = m.res_Id and a.Rescode = m.res_code 
+  where a.flag = 0 and fromFlag = 4 and a.scopeId = #{districtId} and a.scope = 4
+  <if test="format != '全部'">
+         and jf.FileFormat = #{format}
+  </if>
+  <if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+  </if>
+  order by id
+
+  </select>
+  
+  <!-- 根据关键字,查询系统资源检索结果的格式   -->
+  <select id="getSysFileFormats" resultType="String"  >
+  
+	SELECT DISTINCT FileFormat from z_resource a 
+	left join j_filetypedetail b on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname))))) = b.FormatCode and b.flag = 0  
+	WHERE 1=1 and a.flag = 0 
+	and a.fromflag in <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+                     </foreach>
+    <if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+    </if>
+    and FileFormat is not null
+  </select>
+  
+  <!-- 根据关键字,fromFlag，查询校本\区本资源检索结果的格式  -->
+  <select id="getDisFileFormats" resultType="String">
+    SELECT DISTINCT FileFormat from z_districts_resource a
+	left join j_filetypedetail b on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname))))) = b.FormatCode and b.flag = 0 
+	WHERE 1=1 and a.flag = 0 and fromFlag = #{fromFlag}  
+	
+	<if test="fromFlag == 3">
+         and a.scopeId = #{schoolId} and a.scope = 5
+    </if>
+     <if test="fromFlag == 4">
+         and a.scopeId = #{districtId} and a.scope = 4
+    </if>
+	
+    <if test="searchKeyword != null and searchKeyword != ''">
+        and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+    </if>
+    and FileFormat is not null
+  </select>
+  
+  <!-- 根据关键字,查询全部资源检索结果的格式   -->
+  <select id="getAllFileFormats" resultType="String" >
+    SELECT DISTINCT FileFormat from z_resource a 
+	left join j_filetypedetail b on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname))))) = b.FormatCode and b.flag = 0  
+	WHERE 1=1 and a.flag = 0 and FileFormat is not null
+	and a.fromflag in <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+                     </foreach>
+    <if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))  
+    </if>
+     
+     union 
+     
+    SELECT DISTINCT FileFormat from z_districts_resource a
+	left join j_filetypedetail b on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname))))) = b.FormatCode and b.flag = 0  
+	WHERE 1=1 and a.flag = 0 and fromFlag = 3 and a.scopeId = #{schoolId} and a.scope = 5 and FileFormat is not null
+    <if test="searchKeyword != null and searchKeyword != ''">
+        and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+    </if>
+     
+     union 
+     
+    SELECT DISTINCT FileFormat from z_districts_resource a
+	left join j_filetypedetail b on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname))))) = b.FormatCode and b.flag = 0  
+	WHERE 1=1 and a.flag = 0 and fromFlag = 4 and a.scopeId = #{districtId} and a.scope = 4 and FileFormat is not null
+    <if test="searchKeyword != null and searchKeyword != ''">
+        and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+    </if>
+  </select>
+  
+  <!-- 检索范围为全部时，查询推荐列表  -->
+  <select id="getAllResources_preview" resultType="net.tfedu.zhl.cloud.resource.resPreview.entity.ResRecommendationEntity"  >
+ 
+    select id,Title,fromFlag,fullPath,thumbnailpath,FileExt from (select distinct a.id,a.Title,0 as fromFlag,CONCAT(a.Fpath,'/',a.Fname) fullPath,a.thumbnailpath,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt
+	from z_resource a 
+	left join j_filetypedetail jf on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))))=jf.FormatCode
+	where a.flag = 0 and a.fromflag in 
+	                 <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+                     </foreach>
+    <if test="fileFormat != '全部'">
+         and jf.FileFormat = #{fileFormat}
+    </if>
+
+	<if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+    </if>
+ 
+  union 
+
+  select DISTINCT a.id,a.Title,a.fromFlag,CONCAT(a.Fpath,'/',a.Fname) fullPath,a.thumbnailpath,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt
+  from z_districts_resource a 
+  left join j_filetypedetail jf on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))))=jf.FormatCode
+  where a.flag = 0 and fromFlag = 3 and a.scopeId = #{schoolId} and a.scope = 5
+  <if test="fileFormat != '全部'">
+         and jf.FileFormat = #{fileFormat}
+  </if>
+  <if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+  </if>
+
+  union 
+
+  select DISTINCT a.id,a.Title,a.fromFlag,CONCAT(a.Fpath,'/',a.Fname) fullPath,a.thumbnailpath,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt
+  from z_districts_resource a 
+  left join j_filetypedetail jf on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))))=jf.FormatCode
+  where a.flag = 0 and fromFlag = 4 and a.scopeId = #{districtId} and a.scope = 4
+
+    <if test="fileFormat != '全部'">
+         and jf.FileFormat = #{fileFormat}
+    </if>
+    <if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+    </if>) resTmp order by case when id = #{resId} then 0 else 1 end asc 
+  </select>
+  
+  <!-- 检索范围为系统资源时，查询推荐列表 -->
+  <select id="getAllSysResources_preview" resultType="net.tfedu.zhl.cloud.resource.resPreview.entity.ResRecommendationEntity" >
+    select distinct a.id,a.Title,0 as fromFlag,CONCAT(a.Fpath,'/',a.Fname) fullPath,a.thumbnailpath,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt
+	from z_resource a
+	left join j_filetypedetail jf on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))))=jf.FormatCode 
+	where a.flag = 0
+	and a.fromFlag in <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+                     </foreach>
+    <if test="fileFormat != '全部'">
+         and jf.FileFormat = #{fileFormat}
+    </if>
+    <if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+    </if>
+     order by case when a.id = #{resId} then 0 else 1 end asc 
+  </select>
+  
+   <!-- 检索范围为区本 或 校本时，查询推荐列表  -->
+  <select id="getAllDisResources_preview" resultType="net.tfedu.zhl.cloud.resource.resPreview.entity.ResRecommendationEntity">
+    select DISTINCT a.id,a.Title,a.fromFlag,CONCAT(a.Fpath,'/',a.Fname) fullPath,a.thumbnailpath,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt
+	from z_districts_resource a 
+	left join j_filetypedetail jf on (REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))))=jf.FormatCode 
+	where a.flag = 0 and fromFlag = #{fromFlag} 
+ 
+    <if test="fromFlag == 3">
+         and a.scopeId = #{schoolId} and a.scope = 5
+    </if>
+     <if test="fromFlag == 4">
+         and a.scopeId = #{districtId} and a.scope = 4
+    </if>
+    <if test="fileFormat != '全部'">
+         and jf.FileFormat = #{fileFormat}
+    </if>
+    
+    <if test="searchKeyword != null and searchKeyword != ''">
+         and (a.speaker like CONCAT('%',#{searchKeyword},'%') or a.Title like CONCAT('%',#{searchKeyword},'%') or a.keyWord like CONCAT('%',#{searchKeyword},'%') or a.Des like CONCAT('%',#{searchKeyword},'%'))
+     </if>
+      order by case when a.id = #{resId} then 0 else 1 end asc 
+  </select>
+  
+</mapper>

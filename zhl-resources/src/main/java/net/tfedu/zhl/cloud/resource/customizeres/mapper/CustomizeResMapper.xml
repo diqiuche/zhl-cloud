@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.customizeres.dao.CustomizeResMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.customizeres.entity.CustomizeRes" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="rescode" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="subjiect" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="period" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="typeid" jdbcType="TINYINT" javaType="java.lang.Byte" />
+      <arg column="title" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="createDT" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="updateDT" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+    </constructor>
+  </resultMap>
+  
+  
+  
+  <!-- 
+    <resultMap id="subjectMap" type="net.tfedu.zhl.sso.subject.entity.JSubject" >
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="name" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="code" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="abbrev" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="subFlag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="ishistory" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="scopetype" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="provinceId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="cityId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="districtId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="schoolId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+    </constructor>
+  </resultMap> -->
+  
+<!--     
+     自建资源前端展示信息
+   <resultMap id="resViewMap" type="net.tfedu.zhl.cloud.resource.asset.entity.ZAssetView"> 		
+      <result column="resid"  property="resId" />
+      <result column="rescode"  property="resCode" />
+      <result column="title"  property="title" />
+      <result column="unifytype" property="unifyType" />
+      <result column="time"  property="time" />
+      <result column="imgpath"  property="imgPath" />
+      <result column="filesuffix" property="fileSuffix" />
+   </resultMap>
+   -->
+  
+  
+  	<resultMap type="net.tfedu.zhl.sso.subject.entity.JSubject" id="subjectMap">
+			<id property="id" column="subjectid"/>
+			<result property="code"   column="subjectcode"/>
+			<result property="name"   column="subjectname"/>
+  	</resultMap>
+
+
+	
+   <resultMap id="resViewMap" type="net.tfedu.zhl.cloud.resource.asset.entity.ZAssetView"> 		
+      <result column="resid"  property="resId" />
+      <result column="rescode"  property="resCode" />
+      <result column="title"  property="title" />
+      <result column="unifytype" property="unifyType" />
+      <result column="time"  property="time" />
+      <result column="imgpath"  property="imgPath" />
+      <result column="filesuffix" property="fileSuffix" />
+   </resultMap>
+  
+  <select id="getCustomizeResResult" resultMap="resViewMap" parameterType="String">
+	SELECT z.id as resId
+	,m.title,m.rescode as rescode,r.mtype as unifytype,z.CreateDT as time
+	,CONCAT(z.FPath,'/',z.Fname) as imgpath 
+	,REVERSE(LEFT(REVERSE(z.fname),LOCATE('.',REVERSE(z.fname))-1)) as filesuffix
+	FROM j_customizeres  m
+	LEFT JOIN x_resourcetype r on r.id = m.typeid 
+	LEFT JOIN z_resource  z on z.rescode = m.rescode 
+	where m.subjiect = #{subjectCode}
+	ORDER BY m.subjiect,m.period
+  </select>
+  
+  <select id="getAllSubject" resultMap="subjectMap">
+	select  DISTINCT  s.Id as subjectid,s.code as subjectcode,s.name as subjectname
+	FROM j_customizeres  m
+	LEFT JOIN j_subject  s on s.code = m.subjiect
+  </select>
+  
+  
+</mapper>

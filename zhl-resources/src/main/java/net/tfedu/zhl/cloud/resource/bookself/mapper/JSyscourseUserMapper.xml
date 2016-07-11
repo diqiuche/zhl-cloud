@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.bookself.dao.JSyscourseUserMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.bookself.entity.JSyscourseUser" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="userId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="syscourseId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="SubjectId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="createTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+  </resultMap>
+  
+  
+  
+  
+  <resultMap id="viewBookMap" type="net.tfedu.zhl.cloud.resource.bookself.bean.BookSelfView">
+  	<id column="id" property="id"/>
+  	<result column="title" property="title"/>
+  	<result column="tfcode" property="tfcode"/>
+  	<result column="ismybook" property="ismybook"/>
+  	<result column="imgpath" property="imgpath"/>
+  </resultMap>
+  
+  
+  <select id="getAllMyBook" resultMap="viewBookMap">
+	select * from  (
+	  SELECT s.id,
+	  if(pt.bookname is null,if(p.name=s.name,s.name,concat(IFNULL(p.name,''),s.name)),concat(IFNULL(p.name,''),pt.bookname)) as title
+	   ,s.tfcode,1 as ismybook,CONCAT(s.EbookPath,'/',s.tfcode,'.jpg') as imgpath,if(s.UpdateTime is null,s.CreateDT,s.UpdateTime) as time
+	   ,pt.orderno   
+	  FROM j_syscourse_user  su
+		LEFT JOIN j_syscourse s on s.id = su.syscourseId
+	    LEFT JOIN j_syscourse p on p.id = s.PnodeId
+	    LEFT JOIN j_producttfcodecontrast pt on pt.tfcode = s.TFcode
+		LEFT JOIN j_term m on m.id = s.termid
+		LEFT JOIN j_subject b on b.id = s.subjectid
+		where  1=1
+		and su.userid =  #{userId}
+		and su.flag = false and s.flag = false and pt.proCode = 'zy'
+		and s.typeFlag in(0,1) and s.visible = 1 
+	)temp_result
+	<if test="title !='' and title !=null and title != 'null' ">
+		where title like #{title}
+	</if>
+	order by orderno
+  </select>
+  
+  
+  <update id="delMyBook">
+  	update  j_syscourse_user set flag = true where userId = #{userId} and syscourseid = (SELECT id from j_syscourse where tfcode =#{tfcode} )
+  </update>
+  
+  <insert id="addMyBook">
+		replace into  j_syscourse_user(syscourseid,userid,createTime,flag)
+		select  id,#{userId},now(),false from j_syscourse where tfcode = #{tfcode}
+  </insert>
+  
+  
+   <insert id="addMyBookByDefaultKnowledge">
+		replace into  j_syscourse_user(syscourseid,userid,createTime,flag)
+		select  id,#{userId},now(),false from j_syscourse where isKnowledge = 1 and flag =false 
+			and termid = #{termId} and subjectid = #{subjectId} and pnodeid = 0 
+  </insert>
+  
+  
+  
+  <select id="queryBook" resultMap="viewBookMap">
+		select  s.id
+		,if(pt.bookname is null,if(p.name=s.name,s.name,concat(IFNULL(p.name,''),s.name)),concat(IFNULL(p.name,''),pt.bookname)) as title 
+		,s.tfcode,CONCAT(s.EbookPath,'/',s.tfcode,'.jpg') as imgpath
+		, if(su.flag = false ,1,0 ) as ismybook 
+		from  j_syscourse s 
+		LEFT JOIN j_syscourse p on p.id = s.PnodeId
+		LEFT JOIN j_producttfcodecontrast pt on pt.tfcode = s.TFcode
+		LEFT JOIN j_term m on m.id = s.termid
+		LEFT JOIN j_subject b on b.id = s.subjectid
+		LEFT JOIN j_syscourse_user  su  on (su.syscourseid  =  s.id and Su.userid = #{userId})
+		where s.tfcode  like CONCAT(#{tfcode},'%') and length(s.tfcode) = (length(#{tfcode}) + 2)  and pt.proCode = 'zy'
+		and s.typeFlag in(0,1) and s.visible = 1 
+		order by pt.orderno
+		
+  </select>
+
+</mapper>

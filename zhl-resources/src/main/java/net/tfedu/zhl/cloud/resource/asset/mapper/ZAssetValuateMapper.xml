@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.asset.dao.ZAssetValuateMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.asset.entity.ZAssetValuate" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="AssetId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="UserId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="Atime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="Acontent" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="Ascore" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="Atype" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="IsScore" jdbcType="INTEGER" javaType="java.lang.Integer" />
+    </constructor>
+  </resultMap>
+  
+  	
+  	<resultMap type="net.tfedu.zhl.cloud.resource.asset.entity.ResourceReview" id="resourceReviewMap">
+  		<id column="id" property="id"/>
+  		<result column="resid" property="resId"/>
+  		<result column="rescode" property="resCode"/>
+  		<result column="title" property="title"/>
+  		<result column="fromflag" property="fromFlag"/>
+  		<result column="content" property="content"/>
+  		<result column="time" property="time"/>
+  		<result column="imgpath" property="imgPath"/>
+  		<result column="filesuffix" property="fileSuffix"/>
+  	
+  	</resultMap>
+  	
+  <!-- 分页获取我的资源浏览 reviewType 评论级别 0 全部 1 好 2 中3 差 -->
+  <select id='getMyReview' resultMap="resourceReviewMap">
+		select  id,resid,rescode,title,fromflag,time,content,imgpath,filesuffix from (
+			select t.id,t.assetid as resid,t.atime as time ,t.acontent as content,t.ascore as score,if(atype=0,2,1) as fromflag 
+			,a.name as title,a.resourceid as rescode,a.assetpath as imgpath ,reverse(left(reverse(assetpath),locate('.',reverse(assetpath))-1))  as filesuffix
+			from z_assetevaluate t 
+			left join z_asset a on a.id = t.assetid 
+			where t.atype in (0,2)   and t.flag =false and a.flag =false and t.userid = #{userId} and t.IsScore =1 
+			
+			union all 
+					
+			select t.id,t.assetid as resid,t.atime as time ,t.acontent as content,t.ascore as score,0 as fromflag 
+			,z.title,z.rescode,concat(z.fpath,'/',z.fname) as imgpath,reverse(left(reverse(fname),locate('.',reverse(fname))-1)) as filesuffix
+			from z_assetevaluate t 
+			left join z_resource z on z.id = t.assetid 
+			where t.atype = 1   and t.flag =false and z.flag =false  and t.userid = #{userId}  and t.IsScore =1 
+			
+			union all 
+			
+			select t.id,t.assetid as resid,t.atime as time ,t.acontent as content,t.ascore as score,t.atype as fromflag 
+			,r.title,r.rescode,r.fullpath as imgpath ,reverse(left(reverse(fname),locate('.',reverse(fname))-1)) as filesuffix
+			from z_assetevaluate t 
+			left join z_districts_resource r on r.id = t.assetid
+			where t.atype in(3,4)   and t.flag =false and r.flag =false  and t.userid = #{userId}  and t.IsScore =1 
+		)temp_tab
+		where 1 =1  and content != '' and content is not null 
+		<if test="reviewType==1">
+			and score in (4,5)
+		</if>
+		<if test="reviewType==2">
+			and score =3
+		</if>
+		<if test="reviewType==3">
+			and score in (1,2)
+		</if>
+		order by time desc
+  </select>
+  
+  
+  <!--  获取当前用户评论的资源数目 -->
+  	<select id="getReviewedNum" parameterType="Long" resultType="Integer">
+  		select  count(1) as reviewNumber from z_assetevaluate t where  t.flag = false and t.userid = #{userId}
+  	</select>
+  
+  
+  <!-- 获取当前用户所有备课夹中未进行评论的资源数目(自建资源不需评论)  -->
+  	<select id="getUnReviewedNum" parameterType="Long" resultType="Integer">
+			  	
+			select  count(DISTINCT contid,conttype) as  unReviewNumber  from (
+			select c.contId,c.contType
+			,CASE WHEN  (contType=1 or contType=9) then 2 when (contType=2 or contType=10) then 1 WHEN contType=11 THEN 4 WHEN conttype =12 THEN 3 END as atype 
+			from  j_lession_prepare p 
+			LEFT JOIN j_prepare_content c on c.preId = p.id 
+			where  p.flag = false and p.userid =  #{userId}
+			and c.conttype in (2,10,11,12)
+			)temp_t
+			where NOT EXISTS (
+			select id  from z_assetevaluate t where t.flag = false and t.userid = #{userId} and t.AssetId = temp_t.contId and t.Atype = temp_t.atype 
+			)
+  	</select>
+  	
+  	 <!-- 获取当前用户所有备课夹中未进行评论的资源(自建资源不需评论)  -->
+  	<select id="getUnReviewedRes" parameterType="Long" resultType="HashMap">
+			  	
+			select DISTINCT contid,conttype  from (
+			select c.contId,c.contType,c.createtime
+			,CASE WHEN  (contType=1 or contType=9) then 2 when (contType=2 or contType=10) then 1 WHEN contType=11 THEN 4 WHEN conttype =12 THEN 3 END as atype 
+			from  j_lession_prepare p 
+			LEFT JOIN j_prepare_content c on c.preId = p.id 
+			where  p.flag = false and p.userid =  #{userId}
+			and c.conttype in (2,10,11,12)
+			)temp_t
+			where NOT EXISTS (
+			select id  from z_assetevaluate t where t.flag = false and t.userid = #{userId} and t.AssetId = temp_t.contId and t.Atype = temp_t.atype 
+			)
+			order by createtime desc
+  	</select>
+  	
+  	
+  	
+  	<select id="getUnReviewedResPager" resultMap="resourceReviewMap">
+
+	select * from (
+		
+		<if test="sysList.size()>0">
+		select 0 as id,z.id as resid
+		,(select max(c.createtime) from j_lession_prepare p,j_prepare_content c where p.userid =#{userId} and p.flag =false
+				and c.preid = p.id and c.contId = z.id and c.contType in (2,10) )as time
+		,'' as content,0 as score,0 as fromflag,z.title,z.rescode,concat(z.fpath,'/',z.fname) as imgpath
+		,reverse(left(reverse(fname),locate('.',reverse(fname))-1)) as	filesuffix
+		from z_resource z
+		where z.flag =false and z.id in (
+		<foreach collection="sysList" item="item" index="index" separator=",">
+			#{item}
+		</foreach>
+		)
+		</if>
+		
+		
+		<if test="sysList.size()>0 and disList.size()>0">
+			union all
+		</if>
+		
+		<if test="disList.size()>0">
+		
+		select 0 as id,r.id as resid
+		,(select max(c.createtime) from j_lession_prepare p,j_prepare_content c where p.userid =#{userId} and p.flag =false
+				and c.preid = p.id and c.contId = r.id and c.contType in (11,12) )as time
+		,'' as content,0 as score,r.fromflag as fromflag,r.title,r.rescode,r.fullpath as imgpath
+		,reverse(left(reverse(fname),locate('.',reverse(fname))-1)) as		filesuffix
+		from z_districts_resource r
+		where r.flag =false and r.id in(
+		<foreach collection="disList" item="item" index="index" separator=",">
+			#{item}
+		</foreach>
+		)
+		</if>
+		
+	)ttt ORDER BY time desc 
+  	</select>
+  	
+  	
+  	
+  	<!-- 分页获取我的资源评论 reviewType 评论级别 0 全部 1 好 2 中3 差 -->
+  <select id='getMyReviewComment' resultMap="resourceReviewMap">
+		select  id,resid,rescode,title,fromflag,time,content,imgpath,filesuffix from (
+			select t.id,t.assetid as resid,t.atime as time ,t.acontent as content,t.ascore as score,if(atype=0,2,1) as fromflag 
+			,a.name as title,a.resourceid as rescode,a.assetpath as imgpath ,reverse(left(reverse(assetpath),locate('.',reverse(assetpath))-1))  as filesuffix
+			from z_assetevaluate t 
+			left join z_asset a on a.id = t.assetid 
+			where t.atype in (0,2)   and t.flag =false and a.flag =false and t.userid = #{userId} and t.IsScore =1 
+			
+			union all 
+					
+			select t.id,t.assetid as resid,t.atime as time ,t.acontent as content,t.ascore as score,0 as fromflag 
+			,z.title,z.rescode,concat(z.fpath,'/',z.fname) as imgpath,reverse(left(reverse(fname),locate('.',reverse(fname))-1)) as filesuffix
+			from z_assetevaluate t 
+			left join z_resource z on z.id = t.assetid 
+			where t.atype = 1   and t.flag =false and z.flag =false  and t.userid = #{userId} and t.IsScore =1 
+			
+			union all 
+			
+			select t.id,t.assetid as resid,t.atime as time ,t.acontent as content,t.ascore as score,t.atype as fromflag 
+			,r.title,r.rescode,r.fullpath as imgpath ,reverse(left(reverse(fname),locate('.',reverse(fname))-1)) as filesuffix
+			from z_assetevaluate t 
+			left join z_districts_resource r on r.id = t.assetid
+			where t.atype in(3,4)   and t.flag =false and r.flag =false  and t.userid = #{userId} and t.IsScore =1 
+		)temp_tab
+		where 1 =1 and content != '' and content is not null 
+		<choose>
+		<when test="reviewType==1">
+			and score in (4,5)
+		</when>
+		<when test="reviewType==2">
+			and score =3
+		</when>
+		<when test="reviewType==3">
+			and score in (1,2)
+		</when>
+		</choose>
+		order by time desc
+  </select>
+
+</mapper>

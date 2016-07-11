@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.teaching.discuss.dao.TDiscussRecommendMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.teaching.discuss.entity.TDiscussRecommend" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="classname" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="classid" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="classimage" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="schoolname" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="createtime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="creator" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="classurl" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="note" jdbcType="LONGVARCHAR" javaType="java.lang.String" />
+    </constructor>
+  </resultMap>
+  
+  
+  
+  
+  <update id="removeRecommendRecords" >
+  		update t_discuss_recommend set flag =true where id in 
+  		<foreach collection="ids" item="item" separator="," open="(" close=")" index="index">
+  			#{item}
+  		</foreach>
+  </update>
+  
+  <!-- 查询全部  -->
+  <select id="selectAllRecords" resultMap="BaseResultMap">
+  	select * from t_discuss_recommend where flag = false 
+  </select>
+</mapper>

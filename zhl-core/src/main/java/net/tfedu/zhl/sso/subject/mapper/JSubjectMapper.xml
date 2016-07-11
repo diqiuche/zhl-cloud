@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.subject.dao.JSubjectMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.subject.entity.JSubject" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="name" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="code" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="abbrev" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="subFlag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="ishistory" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="scopetype" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="provinceId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="cityId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="districtId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="schoolId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+    </constructor>
+  </resultMap>
+</mapper>

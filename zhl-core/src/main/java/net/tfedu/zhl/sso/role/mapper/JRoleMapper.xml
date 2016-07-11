@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.tfedu.zhl.sso.role.dao.JRoleMapper">
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.role.entity.JRole">
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor>
+      <idArg column="id" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="name" javaType="java.lang.String" jdbcType="VARCHAR" />
+      <arg column="description" javaType="java.lang.String" jdbcType="VARCHAR" />
+      <arg column="model" javaType="java.lang.String" jdbcType="VARCHAR" />
+      <arg column="tag" javaType="java.lang.Boolean" jdbcType="BIT" />
+    </constructor>
+  </resultMap>
+  
+  <select id="getUserRoleByUserId" resultType="Long">
+	SELECT
+	  r.Id
+	FROM j_user u
+	LEFT JOIN j_userrole ur on u.Id=ur.UserId
+	LEFT JOIN j_role r on ur.RoleId=r.id
+	WHERE u.id= #{userId} and r.Id is not NULL and (r.model=' ' or r.model=#{model})	
+	
+	UNION 
+	
+	SELECT
+	  r.Id
+	FROM j_user u
+	LEFT JOIN r_groupuser ug on u.id=ug.userId
+	LEFT JOIN j_rolegroup rg on ug.groupId=rg.group_id
+	LEFT JOIN j_role r on rg.role_id=r.id
+	WHERE u.id=#{userId} and r.Id is not NULL  and (r.model=' ' or r.model=#{model}) 
+  </select>
+  
+  
+  <select id="queryRoleForTeachingResearch" resultMap="BaseResultMap">
+  	select  * from j_role where name in ('教师','老师','大区讲师','总部讲师')
+  </select>
+  
+  
+</mapper>

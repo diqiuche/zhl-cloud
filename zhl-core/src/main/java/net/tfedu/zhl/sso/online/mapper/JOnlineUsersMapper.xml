@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.online.dao.JOnlineUsersMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.online.entity.JOnlineUsers" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="userid" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="loginTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="loginNodeId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="lastopertime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="clientType" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="deviceInfo" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="status" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="loginIp" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="clientVersion" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="token" jdbcType="VARCHAR" javaType="java.lang.String" />
+    </constructor>
+  </resultMap>
+  
+  
+  <select id="getOnlineByToken" resultMap="BaseResultMap">
+  <![CDATA[ 
+  	SELECT * from  j_online_users where token = #{0} and status= 1 and flag =false and loginTime > DATE_ADD(NOW(),INTERVAL -2 HOUR)
+  ]]>
+  </select>
+  
+    
+  <select id="getOnlineByUserId" resultMap="BaseResultMap">
+  <![CDATA[ 	
+  SELECT * from  j_online_users where userId = #{0} and status= 1 and flag =false  and token is not null and loginTime > DATE_ADD(NOW(),INTERVAL -2 HOUR)
+  ]]>
+  </select>
+  
+  
+  
+  <update id="updateOnlineStatus">
+  	update  j_online_users set status=#{1} where token  = #{0}
+  </update>
+  
+  
+  <update id="updateLastOperTime">
+ 	 update  j_online_users set lastopertime=#{1} where token  = #{0}
+  </update>
+  
+  <update id="setTimeOut">
+  	<![CDATA[ 
+  	update  j_online_users set status=2 where loginTime < DATE_ADD(NOW(),INTERVAL -2 HOUR) and status = 1
+  	]]>
+  </update>
+
+
+ <update id="clearRepeatUserLogin">
+ 	update j_online_users set status = 4 where userid=#{0} and flag= false and status =1 and clientType =#{1} and loginNodeId=#{2}
+ </update>
+  
+  
+  
+  
+  
+</mapper>

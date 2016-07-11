@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.teaching.teachCases.dao.TeachCasesMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.teaching.teachCases.entity.TeachCases" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="title" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="school" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="teacher" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="termId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="gradeid" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="subjectId" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="teachDate" jdbcType="DATE" javaType="java.util.Date" />
+      <arg column="bookversion" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="thumbnailpath" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="creator" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="createDate" jdbcType="DATE" javaType="java.util.Date" />
+      <arg column="updateDate" jdbcType="DATE" javaType="java.util.Date" />
+      <arg column="flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+  </resultMap>
+  
+  <!-- 查询一个教学案例下的所有内容   -->
+  <resultMap id="AllContents" type="net.tfedu.zhl.cloud.teaching.teachCases.entity.TCaseContents" >
+       <id property="id" column="id"/>
+       <result property="fname" column="fname"/>
+       <result property="title" column="title"/>
+       <result property="contenttypeid" column="contenttypeid"/>
+       <association property="contents" javaType="net.tfedu.zhl.cloud.teaching.teachCases.entity.TContents">
+            <result property="contenttype" column="contenttype"/>  
+            <result property="thumbnailpath" column="thumbnailpath"/>        
+       </association>
+  </resultMap>
+  
+  <!-- 查询教学案例，根据学科查询 或者查询全部的   -->
+  <select id="selectAllCases" resultType="net.tfedu.zhl.cloud.teaching.teachCases.entity.TeachCases"> 
+
+      select id,title,teacher,school,thumbnailpath,termid,subjectid,teachdate,bookversion,gradeid
+      from t_teachcases where fromflag = #{fromFlag} and termId = #{termId}
+      <if test="subjectId > 0">
+         and subjectid = #{subjectId}
+      </if>
+        and flag = 0
+  
+  </select>
+  
+  <!-- 新建一个教学案例 -->
+  <insert id="addOneTeachCase">
+     insert into t_teachcases(title,teacher,school,thumbnailpath,gradeid,fromflag,termid,subjectId,bookversion,creator,createdate,updatedate,teachdate) 
+     values(#{teachCase.title},#{teachCase.teacher},#{teachCase.school},#{teachCase.thumbnailpath},#{teachCase.gradeid},#{teachCase.fromflag}
+     ,#{teachCase.termid},#{teachCase.subjectid},#{teachCase.bookversion},#{teachCase.creator},now(),now(),#{teachCase.teachdate}) 
+  </insert>
+  
+  <!-- 编辑一个教学案例 -->
+  <update id="editOneTeachCase">
+     update t_teachcases set title = #{teachCase.title},teacher = #{teachCase.teacher},school = #{teachCase.school},thumbnailpath = #{teachCase.thumbnailpath},creator =#{teachCase.creator},
+     gradeid = #{teachCase.gradeid},bookversion = #{teachCase.bookversion},teachDate = #{teachCase.teachdate} ,fromflag =#{teachCase.fromflag} ,termid =#{teachCase.termid}, subjectId = #{teachCase.subjectid} ,updateDate = now()
+     where id = #{teachCase.id}
+  </update>
+  <!-- 删除一个教学案例 -->
+  <update id="deleteOneTeachCase">
+    update t_teachcases set flag = 1 where id = #{id}
+  </update>
+  
+  <!-- 查询一个教学案例的详细信息 -->
+  <select id="selectOneTeachCase" resultType="net.tfedu.zhl.cloud.teaching.teachCases.entity.TeachCases">
+    select id,title,teacher,school,thumbnailpath,(select name from t_grade where id = t_teachcases.gradeid ) as gradeName,
+    teachDate,bookversion from t_teachcases where id = #{id}
+  </select>
+  
+  <!-- 查询一个教学案例下的所有内容 -->
+  <select id="getAllContentsOfTeachCase" resultMap="AllContents">
+    select a.id,a.fname,a.title,b.id as contenttypeid,b.contenttype,b.thumbnailpath 
+    from t_casecontents a
+	left join t_contents b
+	on a.contentTypeId = b.id
+	where a.caseid = #{id} and flag = 0
+  </select>
+  
+  <!-- 查询一个教学案例下是否已经存在特定的内容   -->
+  <select id="selectOneContent" resultType="Integer">
+     select count(id) from t_casecontents where contenttypeid = #{typeId} and caseId = #{caseId} and flag = 0;
+  </select>
+  
+  <!-- 在教学案例下新增一个内容 -->
+  <insert id="addOneContent">
+     insert into t_casecontents (caseId,contenttypeid,fname,title,creator,createDate) values(#{caseId},#{typeId},#{fname},#{title},#{userId},now())
+  </insert>
+  
+  <!-- 删除一个教学案例下的内容 -->
+  <update id="deleteOneContent">
+    update t_casecontents set flag = 1 where id = #{id}
+  </update>
+</mapper>

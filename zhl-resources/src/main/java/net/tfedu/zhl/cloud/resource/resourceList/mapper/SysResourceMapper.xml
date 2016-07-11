@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.resourceList.dao.SysResourceMapper" >
+  
+  <!-- 分页查询系统资源信息的每一条记录信息 -->
+ <resultMap id="SysResourceMap" type="net.tfedu.zhl.cloud.resource.resourceList.entity.SysResourceEntity" >
+       <result column="Id" property="Id" />
+       <result column="ResCode" property="ResCode" />
+       <result column="Title" property="Title" />
+       <result column="Fpath" property="Fpath" />
+       <result column="Fname" property="Fname" />
+       <result column="MType" property="MType" />
+       <result column="typeId" property="typeId" />
+       <result column="FSize" property="FSize" />
+       <result column="DLoadTimes" property="DLoadTimes" />
+       <result column="ClickTimes" property="ClickTimes" />
+       <result column="speaker" property="speaker" />
+       <result column="res_time" property="res_time" />
+       <result column="FileExt" property="FileExt" />
+       <result column="resolution" property="resolution" />
+       <result column="diskorder" property="diskorder" />
+       <result column="Displayindex" property="Displayindex" />
+       <result column="isDWj" property="isDWJ" />
+       <result column="UpdateDT" property="UpdateDT" />
+       <result column="orderNum" property="orderNum" />
+       <result column="avgScore" property="avgScore" />
+       <result column="fromFlag" property="fromFlag" />
+       <result column="thumbnailpath" property="thumbnailpath" />
+       <result column="fullpath" property="fullpath" />
+       
+ </resultMap>
+        
+ <!-- 分页查询系统资源信息的所有记录 -->
+ <select id="getAllSysRes"  resultMap="SysResourceMap" >
+    select distinct a.Id,a.ResCode,a.Title,a.Fname,a.Fpath,CONCAT(a.Fpath,'/',a.Fname) fullpath,a.thumbnailpath,b.MType MType, b.id typeId, a.FSize FSize,a.ClickTimes,a.DloadTimes,a.speaker, 
+	m.res_time,a.UpdateDT,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt,a.resolution,1 diskorder,a.isDWJ,jf.orderNum,b.DisplayIndex, 0 as fromFlag,
+	(SELECT case when COUNT(t.assetId) = 0 then a.displayLevel else (sum(t.Ascore) / COUNT(t.assetId) + a.displayLevel) / 2 end avgScore from z_assetevaluate t where t.assetId = a.id and t.flag = 0 and t.IsScore = 0 and t.aType = 1) avgScore
+	from z_resource a 
+	left join x_resourcetype b on a.MType = b.id 
+	left join j_filetypedetail jf on REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname))))=jf.FormatCode and jf.flag = 0 
+	left join z_resnav c on a.ResCode=c.ResCode 
+	left join j_syscourse d on  c.StructCode=d.TFcode 
+	left join z_res_medium m on a.id = m.res_Id and a.Rescode = m.res_code 
+	LEFT JOIN z_res_disk k on k.rescode = a.rescode 
+	where a.flag = 0 and c.flag=0 and d.flag=0 and a.fromflag in 
+	
+	            <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+                </foreach>
+	
+	 and d.typeFlag in (0,1) and d.tfcode like CONCAT(#{tfcode},'%')
+	 
+	 <if test="fileFormat != '全部'">
+         and jf.FileFormat = #{fileFormat}
+     </if>
+     and a.mtype in <foreach item="item" index="index" collection="typeIds" 
+                         open="(" separator="," close=")">
+                         #{item}
+                </foreach>
+    
+	 <if test="orderBy == 0">
+        order by avgScore desc,b.DisplayIndex asc,jf.orderNum asc,a.id
+     </if>
+     <if test="orderBy == 1">
+        order by DloadTimes desc,avgScore desc,b.DisplayIndex asc,jf.orderNum asc,a.id
+     </if>
+     <if test="orderBy == 2">
+        order by UpdateDT desc,avgScore desc,b.DisplayIndex asc,jf.orderNum asc,a.id
+     </if>                               
+ </select>
+ 
+ <!-- 分页查询系统资源信息的所有记录，e备课  -->
+ <select id="getAllSysRes_EPrepare"  resultMap="SysResourceMap">
+   
+    select distinct a.Id,a.ResCode,a.Title,a.Fname,a.Fpath,CONCAT(a.Fpath,'/',a.Fname) fullpath,a.thumbnailpath,b.MType MType, b.id typeId, a.FSize FSize,a.ClickTimes,a.DloadTimes,a.speaker, 
+	m.res_time,a.UpdateDT,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt,a.resolution,1 diskorder,a.isDWJ,jf.orderNum,b.DisplayIndex, 0 as fromFlag,
+	(SELECT case when COUNT(t.assetId) = 0 then a.displayLevel else (sum(t.Ascore) / COUNT(t.assetId) + a.displayLevel) / 2 end avgScore from z_assetevaluate t where t.assetId = a.id and t.flag = 0 and t.IsScore = 0 and t.aType = 1) avgScore
+	from z_resource a 
+	left join x_resourcetype b on a.MType = b.id 
+	left join j_filetypedetail jf on REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname))))=jf.FormatCode and jf.flag = 0 
+	left join z_resnav c on a.ResCode=c.ResCode 
+	left join j_syscourse d on  c.StructCode=d.TFcode 
+	left join z_res_medium m on a.id = m.res_Id and a.Rescode = m.res_code 
+	LEFT JOIN z_res_disk k on k.rescode = a.rescode 
+	where a.flag = 0 and c.flag=0 and d.flag=0 and a.isLocal = 1 and a.fromflag in 
+	
+	            <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+                </foreach>
+	
+	 and d.typeFlag in (0,1) and d.tfcode like CONCAT(#{tfcode},'%')
+	 <if test="fileFormat != '全部'">
+         and jf.FileFormat = #{fileFormat}
+     </if>
+     
+     <if test="searchWord != null and searchWord != '' ">
+         and a.Title like CONCAT('%',#{searchWord},'%')    
+     </if>
+     and a.mtype in <foreach item="item" index="index" collection="typeIds" 
+                         open="(" separator="," close=")">
+                         #{item}
+                </foreach>
+	 <if test="orderBy == 0">
+        order by avgScore desc,b.DisplayIndex asc,jf.orderNum asc,a.id
+     </if>
+     <if test="orderBy == 1">
+        order by DloadTimes desc,avgScore desc,b.DisplayIndex asc,jf.orderNum asc,a.id
+     </if>
+     <if test="orderBy == 2">
+        order by UpdateDT desc,avgScore desc,b.DisplayIndex asc,jf.orderNum asc,a.id
+     </if>                               
+ </select>
+ 
+ <!-- 分页查询系统资源信息的所有记录，资源预览的推荐  -->
+ <select id="getAllSysRes_Preview"  resultType="net.tfedu.zhl.cloud.resource.resPreview.entity.ResRecommendationEntity" >
+    select a.id,a.Title,0 as fromFlag,CONCAT(a.Fpath,'/',a.Fname) fullPath,a.thumbnailpath,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt,a.UpdateDT,a.DloadTimes,
+    (SELECT case when COUNT(t.assetId) = 0 then a.displayLevel else (sum(t.Ascore) / COUNT(t.assetId) + a.displayLevel) / 2 end avgScore from z_assetevaluate t where t.assetId = a.id and t.flag = 0 and t.IsScore = 0 and t.aType = 1) avgScore
+	from z_resource a 
+	left join z_resnav c on a.ResCode=c.ResCode 
+	left join j_syscourse d on c.StructCode=d.TFcode 
+	where a.id = #{resId} and a.flag = 0 and c.flag=0 and d.flag=0 and a.fromflag in  
+	
+	            <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+                </foreach>
+	and d.typeFlag in (0,1)   union  
+	
+    select id,Title,fromFlag,fullPath,thumbnailpath,FileExt,UpdateDT,DloadTimes,avgScore from (
+    select a.id,a.Title,0 as fromFlag,CONCAT(a.Fpath,'/',a.Fname) fullPath,a.thumbnailpath,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt,a.UpdateDT,a.DloadTimes,
+    (SELECT case when COUNT(t.assetId) = 0 then a.displayLevel else (sum(t.Ascore) / COUNT(t.assetId) + a.displayLevel) / 2 end avgScore from z_assetevaluate t where t.assetId = a.id and t.flag = 0 and t.IsScore = 0 and t.aType = 1) avgScore
+	from z_resource a
+	left join x_resourcetype b on a.MType = b.id 
+	left join j_filetypedetail jf on REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname))))=jf.FormatCode
+	left join z_resnav c on a.ResCode=c.ResCode 
+	left join j_syscourse d on c.StructCode=d.TFcode 
+	where a.flag = 0 and a.id != #{resId} and c.flag=0 and d.flag=0 and a.fromflag in  
+	
+	            <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+                </foreach>
+	
+	 and d.typeFlag in (0,1) and d.tfcode like CONCAT(#{tfcode},'%')
+	 
+	 <if test="fileFormat != '全部'">
+         and jf.FileFormat = #{fileFormat}
+     </if>
+
+     and a.mtype in <foreach item="item" index="index" collection="typeIds" 
+                         open="(" separator="," close=")">
+                         #{item}
+                </foreach>
+     
+	 <if test="orderBy == 0">
+        order by avgScore desc,b.DisplayIndex asc,jf.orderNum asc,a.id
+     </if>
+     <if test="orderBy == 1">
+        order by DloadTimes desc,avgScore desc,b.DisplayIndex asc,jf.orderNum asc,a.id
+     </if>
+     <if test="orderBy == 2">
+        order by UpdateDT desc,avgScore desc,b.DisplayIndex asc,jf.orderNum asc,a.id
+     </if>)tmp                                     
+ </select>
+ 
+ 
+ <!-- 我的上传， 预览一条资源时，产生的资源推荐。根据tfcode，查询该课程结点下的所有系统、区本、校本资源  -->
+ <select id="getAllResByTfcode" resultType="net.tfedu.zhl.cloud.resource.resPreview.entity.ResRecommendationEntity" >
+ 
+    select distinct a.id,a.name Title,1 fromFlag,a.assetPath fullPath,a.assetPath as thumbnailpath,REVERSE(LEFT(REVERSE(a.assetPath),LOCATE('.',REVERSE(a.assetPath)))) as FileExt
+	from z_asset a where a.id = #{resId} and a.flag = 0 and a.FileType = 'A'
+	 
+    union all 
+   
+    select distinct a.id,a.Title,0 as fromFlag,CONCAT(a.Fpath,'/',a.Fname) fullPath,a.thumbnailpath,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt
+	from z_resource a 
+	left join z_resnav c on a.ResCode=c.ResCode 
+	left join j_syscourse d on c.StructCode=d.TFcode 
+	where a.flag = 0 and c.flag=0 and d.flag=0 and a.fromflag in 
+	            <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+                </foreach>
+	
+	and d.typeFlag in (0,1) and c.StructCode like  CONCAT(#{tfcode},'%')  
+	 
+	union all 
+	
+	select DISTINCT a.id,a.Title,a.fromFlag,CONCAT(a.Fpath,'/',a.Fname) fullPath,a.thumbnailpath,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt
+	from z_districts_resource a 
+	left join x_resourcetype b on a.MType = b.id and b.flag = 0 
+	LEFT JOIN z_districts_resnav c on c.flag=0 and a.ResCode=c.ResCode 
+	left join j_syscourse d on d.flag=0 and c.StructCode=d.tfcode 
+    where a.flag = 0 and a.scopeId = #{schoolId} and c.StructCode like  CONCAT(#{tfcode},'%')   
+
+    union all
+    
+    select DISTINCT a.id,a.Title,a.fromFlag,CONCAT(a.Fpath,'/',a.Fname) fullPath,a.thumbnailpath,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt
+	from z_districts_resource a 
+	left join x_resourcetype b on a.MType = b.id and b.flag = 0 
+	LEFT JOIN z_districts_resnav c on c.flag=0 and a.ResCode=c.ResCode 
+	left join j_syscourse d on d.flag=0 and c.StructCode=d.tfcode 
+    where a.flag = 0 and a.scopeId = #{districtId} and c.StructCode like  CONCAT(#{tfcode},'%')    
+
+ </select>  
+ 
+ <!-- 资源预览  获取一条系统资源的详细信息 -->
+ <select id="getSysResInfo" resultType="net.tfedu.zhl.cloud.resource.resPreview.entity.ResPreviewInfo">
+   select distinct * from (select a.id,a.Title,a.keyWord,a.Des,a.fSize,e.MType,e.id typeId,a.DLoadTimes,a.ClickTimes,0 as fromflag,a.fname,a.Fpath,
+   (select COUNT(tt.id) from z_assetevaluate tt where tt.assetId = a.id and tt.flag = 0 and tt.IsScore = 0 and tt.aType = 1)userNum, 
+   (select ascore from z_assetevaluate ttt where ttt.assetId = a.id and ttt.flag = 0 and ttt.IsScore = 0 and ttt.aType = 1 and ttt.UserId = #{userId} ) score,
+   (SELECT case when COUNT(t.assetId) = 0 then 0 else (sum(t.Ascore) / COUNT(t.assetId)) end avgScore from z_assetevaluate t where t.assetId = a.id and t.flag = 0 and t.IsScore = 0 and t.aType = 1) avgScore,REVERSE(LEFT(REVERSE(a.Fname),LOCATE('.',REVERSE(a.Fname)))) as FileExt,a.isDWJ 
+   from z_resource a 
+   left join z_resnav b on a.ResCode=b.ResCode 
+   left join j_syscourse c on c.tfcode = b.StructCode 
+   left join x_resourcetype e on a.MType = e.id 
+   where b.flag=0 and c.flag=0 and a.flag=0 and a.id =#{resId} ) a limit 1
+ </select>
+ 
+ <!-- 根据一个structCode 查询  一个版本的 目录-->
+ <select id="getSysNav" resultType="net.tfedu.zhl.cloud.resource.resPreview.entity.ResNavEntity">
+     select id,name,tfcode from j_syscourse where LOCATE(tfcode,#{structCode}) > 0 ORDER BY tfcode 
+ </select>
+ 
+ <!-- 根据系统资源id，查询其对应的所有版本的StructCode -->
+ <select id="getAllRescodes" resultType="String">
+    select StructCode from z_resnav nav 
+	LEFT JOIN z_resource res on nav.ResCode = res.ResCode 
+	LEFT JOIN j_syscourse sys on sys.tfcode = StructCode 
+	where res.id = #{resId} and nav.flag = false and res.flag = false and sys.flag = false 
+	ORDER BY LOCATE(#{curTfcode},StructCode) desc limit 1
+ </select>
+ 
+ 
+ <!-- 更新点击次数（+1） -->
+ <update id="updateClickTime" parameterType="String">
+	 update z_resource  set ClickTimes = ClickTimes+1  where rescode =#{rescode}
+ </update>
+ 
+ <!-- 更新下载次数（+1） --> 
+ <update id="updateDownloadTime" parameterType="String">
+ 	update z_resource  set DLoadTimes = DLoadTimes+1  where rescode =#{rescode}
+ </update>
+ 
+        
+</mapper>

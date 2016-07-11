@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.userlog.dao.JUserlogMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.userlog.entity.JUserlog" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="userId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="logtypecode" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="opertypecode" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="objname" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="objId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="subjectId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="createtime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="duration" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="downflag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="alltestnum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="corrtestnum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="isFlag" jdbcType="INTEGER" javaType="java.lang.Integer" />
+    </constructor>
+    </resultMap>
+    
+    
+      	
+  	<resultMap type="net.tfedu.zhl.cloud.resource.userlog.entity.ResourceViewLog" id="resourceViewMap">
+  		<id column="id" property="id"/>
+  		<result column="resid" property="resId"/>
+  		<result column="rescode" property="resCode"/>
+  		<result column="title" property="title"/>
+  		<result column="fromflag" property="fromFlag"/>
+  		<result column="time" property="time"/>
+  		<result column="imgpath" property="imgPath"/>
+  		<result column="filesuffix" property="fileSuffix"/> 	
+  		<result column="unifytype" property="unifyType"/> 	
+  	</resultMap>
+    
+    <select id="getMyViewForResource" resultMap="resourceViewMap">
+    	select  id,resid,rescode,title,fromflag,time,imgpath,filesuffix,unifytype from (
+		select  max(t.id)as id ,t.objid as resid ,max(t.createtime) as time, 1 as fromflag,p.mtype as unifytype,p.id as unifyTypeId
+		,a.name as title,a.ResourceId as rescode,a.AssetPath as imgPath ,REVERSE(LEFT(REVERSE(AssetPath),LOCATE('.',REVERSE(AssetPath))-1))  as fileSuffix
+		from j_userlog t
+		LEFT JOIN z_asset a on a.id = t.objid  
+		LEFT JOIN x_resourcetype p on  p.id = a.unifyTypeId
+		where  t.logtypecode in ('asset','sharedres') and t.opertypecode = 'view' and a.flag = false and t.userid =#{userId} and t.flag = false and t.isflag = 0 
+		GROUP BY objid 
+		
+		union ALL 
+		
+		select  max(t.id)as id ,t.objid as resid ,max(t.createtime) as time, 0 as fromflag,p.mtype as unifytype,p.id as unifyTypeId
+		,z.title,z.rescode,CONCAT(z.FPath,'/',z.Fname) as imgPath,REVERSE(LEFT(REVERSE(fname),LOCATE('.',REVERSE(fname))-1)) as fileSuffix
+		from j_userlog t
+		LEFT JOIN z_resource z on z.id = t.objid 
+		LEFT JOIN x_resourcetype p on  p.id = z.mtype 
+		where  t.logtypecode = 'resource'  and t.opertypecode = 'view' and z.flag= false and t.userid = #{userId} and t.flag = false and t.isflag = 0 
+		GROUP BY objid 
+		
+		union ALL 
+		
+		select   max(t.id)as id ,t.objid as resid ,max(t.createtime) as time, if(t.logtypecode='districtres',4,3) as fromflag,p.mtype as unifytype,p.id as unifyTypeId
+		,r.title,r.rescode,r.fullpath as imgPath ,REVERSE(LEFT(REVERSE(fname),LOCATE('.',REVERSE(fname))-1)) as fileSuffix
+		from j_userlog t
+		LEFT JOIN z_districts_resource r on r.id = t.objid
+		LEFT JOIN x_resourcetype p on  p.id = r.mtype
+		where  t.logtypecode in ('districtres','schoolres') and r.flag =false  and t.userid = #{userId} and t.flag = false and t.isflag = 0 
+		GROUP BY objid 
+		)temp_result
+		where  1 =1 
+	
+		<if test="unifyTypeId>0">
+			and EXISTS ( select  id from x_resourcetype  where (id = #{unifyTypeId} or pid = #{unifyTypeId}>0 )and flag =false and id = temp_result.unifyTypeId )
+		</if>
+		
+		<if test=" (fileFormat !='' and fileFormat !=null and fileFormat!='全部' and fileFormat!='all') ">
+			and EXISTS (select FormatCode from j_filetypedetail where flag = false  and FileFormat =#{fileFormat} and FormatCode = CONCAT('.',temp_result.filesuffix))
+		</if>
+		
+		ORDER BY time desc
+	    
+    
+    </select>
+    
+    
+    
+    
+</mapper>

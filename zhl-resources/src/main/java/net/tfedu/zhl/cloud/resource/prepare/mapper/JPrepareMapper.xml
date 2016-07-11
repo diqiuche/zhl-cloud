@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.prepare.dao.JPrepareMapper" >
+
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.prepare.entity.JPrepare" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor>
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="userId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="createtime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="updatetime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="title" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="courseId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="ordernum" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="tfcode" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="subjectId" jdbcType="BIGINT" javaType="java.lang.Long" />
+    </constructor>
+  </resultMap>
+    
+  <!-- 备课夹前端展示信息 -->
+   <resultMap id="viewResultMap" type="net.tfedu.zhl.cloud.resource.prepare.entity.JPrepareView" >
+  		<result column="id" property="id" javaType="java.lang.Long"/>
+  		<result column="title" property="title" javaType="java.lang.String"/>
+  		<result column="timeLabel" property="timeLabel" javaType="java.lang.String"/>
+  		<result column="contentnumber" property="contentNumber" javaType="java.lang.Integer"/>
+   </resultMap>
+  
+
+      
+  <!-- 系统资源的第一个关联节点的信息 -->
+   <resultMap id="firstNavMap" type="net.tfedu.zhl.cloud.resource.prepare.entity.FirstNavigationInfo" >
+  		<result column="title" property="title" javaType="java.lang.String"/>
+  		<result column="tfcode" property="tfcode" javaType="java.lang.String"/>
+  		<result column="resId" property="resId" javaType="java.lang.Long"/>
+   </resultMap>
+  
+
+  
+  
+  <!--  清空目标备课夹下的所有备课夹内容  -->
+  <update id="clearPrepareContentByPrepareId" parameterType="Long">
+  		update  j_prepare_content set flag = true where preid = #{prepareId}	
+  </update>
+  
+  
+   <!--  将默认0的排序字段设置为id的值  --> 
+  <update id="update_default_prepare_order">
+  		update j_lession_prepare set ordernum =id where ordernum = 0 
+  </update>
+  
+  
+   <!--  将默认0的排序字段设置为id的值  --> 
+  <update id="update_default_prepare_content_order">
+  		update j_prepare_content set orderidx =id where orderidx = 0 
+  </update>
+  
+  
+  
+  <!-- 删除备课夹中指定的类型的资源 -->  
+  <update id="removeResourceFromPrepare">
+  	update j_prepare_content set flag = true where preId = #{0} and contType = #{1} and contId = #{2} 
+  </update>
+  
+  
+  
+  
+  <!--获取当前节点及其以下节点的备课夹 -->
+  <select id="queryPrepareList" resultMap="viewResultMap">
+  	SELECT
+	id,
+	title,
+	'' as timeLabel
+	FROM
+		j_lession_prepare
+	WHERE
+		tfcode LIKE #{0}
+	AND userid = #{1} AND flag = false 
+	ORDER BY updatetime desc,createtime desc 
+  </select>
+  
+  <!-- 仅获取当前节点下的备课夹 -->
+  <select id="querySelfPrepareList" resultMap="viewResultMap">
+  	SELECT
+	id,
+	title,
+	'' as timeLabel
+	FROM
+		j_lession_prepare
+	WHERE
+		tfcode = #{0}
+	AND userid = #{1} AND flag = false 
+	ORDER BY updatetime desc,createtime desc 
+  </select>
+  
+  
+    <!-- 获取备课夹及其时间范围 -->
+  <select id="queryPrepareAndTimeScopeList" resultMap="viewResultMap">
+  	SELECT
+	id,
+	title,
+	(CASE WHEN updatetime > DATE_SUB(CURDATE(), INTERVAL 1 WEEK) then 'withinweek'
+	   WHEN  updatetime > DATE_SUB(CURDATE(), INTERVAL 1 MONTH) then 'withinmonth'
+	   ELSE  'moreearly' END) as timeLabel
+	FROM
+		j_lession_prepare
+	WHERE
+		tfcode LIKE #{tfcode}
+	AND userid =  #{userId}  AND flag = false 
+	<if test="title!=''">
+		AND title like #{title}	
+	</if>
+	ORDER BY updatetime desc,createtime desc 
+  </select>
+  
+  
+      <!-- 获取备课夹及其时间范围 
+      
+    <select id="queryPrepareByTermAndSubject" resultMap="viewResultMap">
+  	SELECT
+	p.id,
+	p.title,
+	(CASE WHEN p.updatetime > DATE_SUB(CURDATE(), INTERVAL 1 WEEK) then 'withinweek'
+	   WHEN  p.updatetime > DATE_SUB(CURDATE(), INTERVAL 1 MONTH) then 'withinmonth'
+	   ELSE  'moreearly' END) as timeLabel,p.tfcode
+	FROM
+		j_lession_prepare p
+  LEFT JOIN j_syscourse s on s.tfcode = p.tfcode 
+ 
+	WHERE
+  1 = 1 
+	AND p.userid =  #{userId} AND p.flag = false 
+  and s.TermId = #{termId} and s.SubjectId = #{subjectId}
+	<if test="title!=''">
+		AND title like #{title}	
+	</if>
+	ORDER BY p.updatetime desc
+
+  </select>    
+      
+      -->
+    <!-- timeLabel:withinweek、withinmonth、moreearly  -->  
+  <select id="queryPrepareByTermAndSubject" resultMap="viewResultMap">
+  
+  	SELECT
+	p.id,
+	p.title,
+	#{timeLabel} as timeLabel,p.tfcode
+	FROM
+		j_lession_prepare p
+  LEFT JOIN j_syscourse s on s.tfcode = p.tfcode 
+ 
+	WHERE
+  1 = 1 
+	AND p.userid =  #{userId} AND p.flag = false 
+  and s.TermId = #{termId} and s.SubjectId = #{subjectId}
+	<if test="title!=''">
+		AND title like #{title}	
+	</if>
+
+	<if test="'withinweek'==timeLabel">
+		AND p.updatetime >= DATE_SUB(NOW(), INTERVAL 1 WEEK)
+	</if>
+	<if test="'withinmonth'==timeLabel ">
+		AND p.updatetime >= DATE_SUB(NOW(), INTERVAL 1 MONTH) AND DATE_SUB(NOW(), INTERVAL 1 WEEK)- p.updatetime > 0  
+	</if>
+	<if test="'moreearly'==timeLabel ">
+		AND DATE_SUB(NOW(), INTERVAL 1 MONTH)- p.updatetime > 0 
+	</if>	
+		ORDER BY p.updatetime desc,p.createtime desc 
+
+  </select>
+  
+  
+  
+  
+  
+ 
+  
+  <select id="getFirstNavigationForSysResource" parameterType="String" resultMap="firstNavMap"> 	
+		select  n.structCode as tfcode,t.Name as title,r.id as resId  from z_resnav n
+		left join j_syscourse t  on t.TFcode = n.StructCode
+		LEFT JOIN z_resource  r  on r.ResCode = n.ResCode
+		where n.rescode = #{resCode} ORDER BY n.createdt limit 1
+  </select>
+  
+   
+  
+   <!-- 备课夹内容前端展示信息 -->
+   <resultMap id="viewPrepareContMap" type="net.tfedu.zhl.cloud.resource.prepare.entity.JPrepareContentView"> 		
+      <id column="id" property="id" />
+      <result column="title"  property="title" />
+      <result column="resid"  property="resId" />
+      <result column="fromflag" property="fromFlag" />
+      <result column="unifytype" property="unifyType" />
+      <result column="size" property="size" />
+      <result column="timeline" property="timeline" />
+      <result column="time"  property="time" />
+      <result column="imgpath"  property="imgPath" />
+      <result column="filesuffix" property="fileSuffix" />
+   </resultMap>
+  
+  
+  
+  
+  <!-- 获取备课夹内容列表(其中缩略图、文件后缀需要工具类继续处理) -->
+  <select id="queryPrepareContentList" resultMap="viewPrepareContMap" > 
+    <![CDATA[ 	  
+  	select  id,title,resId,fromFlag,unifytype,size,timeline,time,imgpath,filesuffix from  (	
+		select  t.id ,a.id as resId,a.name as title,a.createTime as time,1 as fromFlag
+		,p.MType as  unifyType,a.AssetSize as size,'' as timeline,a.AssetPath as imgPath ,'' as fileSuffix,t.orderIdx
+		from  j_prepare_content  t  
+		LEFT JOIN z_asset a on a.id = t.contId 
+		LEFT JOIN x_resourcetype p  on p.id = a.unifyTypeId
+		where t.preid = #{0}  and t.flag = false  and t.contType in (1,9)
+		and a.flag =false and a.FileType = 'A'
+		
+		UNION ALL
+		
+		select t.id,z.Id as resId,z.title,z.CreateDT  as  time,0 as fromFlag
+		,p.MType as  unifyType,z.FSize as size,IFNULL(m.res_time,'') as  timeline ,CONCAT(z.FPath,'/',z.Fname) as imgPath ,'' as fileSuffix,t.orderIdx		
+		from  j_prepare_content  t  
+		LEFT JOIN z_resource  z on t.contId = z.Id
+		LEFT JOIN x_resourcetype p  on p.id = z.MType
+		LEFT JOIN z_res_medium m on m.res_code = z.ResCode
+		where t.preid =   #{0}  and t.flag = false  and t.contType in (2,10)
+		and z.flag = false 
+		
+		UNION ALL 
+		
+		select t.id,r.id as resId,r.title,r.CreateDT as time ,fromFlag as fromFlag
+		,p.MType as unifyType,r.FSize as size,'' as timeline,r.fullpath as imgPath ,'' as fileSuffix,t.orderIdx
+		from  j_prepare_content  t  
+		LEFT JOIN z_districts_resource r on r.id = t.contId
+		LEFT JOIN x_resourcetype p on p.id = r.mtype
+		where t.preid =  #{0}  and t.flag = false  and t.contType in (11,12)
+		and r.flag = false 
+		
+	)temp_result ORDER BY orderIdx desc 
+	 ]]>
+  </select>
+  
+  
+  
+   <!-- 获取 受限的，排除e备课不能使用的部分(类型)的备课夹内容列表(其中缩略图、文件后缀需要工具类继续处理) --> 
+  <select id="queryLimitedPrepareContentList" resultMap="viewPrepareContMap" > 
+  	select  id,title,resId,fromFlag,unifytype,size,timeline,time,imgpath,filesuffix from  (	
+		select  t.id ,a.id as resId,a.name as title,a.createTime as time,1 as fromFlag,p.id as unifyTypeId
+		,p.MType as  unifyType,a.AssetSize as size,'' as timeline,a.AssetPath as imgPath ,'' as fileSuffix,t.orderIdx
+		from  j_prepare_content  t  
+		LEFT JOIN z_asset a on a.id = t.contId 
+		LEFT JOIN x_resourcetype p  on p.id = a.unifyTypeId
+		where t.preid = #{prepareId}  and t.flag = false  and t.contType in (1,9)
+		and a.flag =false and a.FileType = 'A'
+		
+		UNION ALL
+		
+		select t.id,z.Id as resId,z.title,z.CreateDT  as  time,0 as fromFlag,p.id as unifyTypeId
+		,p.MType as  unifyType,z.FSize as size,IFNULL(m.res_time,'') as  timeline ,CONCAT(z.FPath,'/',z.Fname) as imgPath ,'' as fileSuffix,t.orderIdx		
+		from  j_prepare_content  t  
+		LEFT JOIN z_resource  z on t.contId = z.Id
+		LEFT JOIN x_resourcetype p  on p.id = z.MType
+		LEFT JOIN z_res_medium m on m.res_code = z.ResCode
+		where t.preid =   #{prepareId}  and t.flag = false  and t.contType in (2,10)
+		and z.flag = false 
+		
+		UNION ALL 
+		
+		select t.id,r.id as resId,r.title,r.CreateDT as time ,fromFlag as fromFlag,p.id as unifyTypeId
+		,p.MType as unifyType,r.FSize as size,'' as timeline,r.fullpath as imgPath ,'' as fileSuffix,t.orderIdx
+		from  j_prepare_content  t  
+		LEFT JOIN z_districts_resource r on r.id = t.contId
+		LEFT JOIN x_resourcetype p on p.id = r.mtype
+		where t.preid =  #{prepareId}  and t.flag = false  and t.contType in (11,12)
+		and r.flag = false 		
+	)temp_result 	
+	where temp_result.unifyTypeId NOT IN (
+		select id from x_resourcetype where  (		
+		id in 
+		<foreach collection="removeTypeIds" item="item" index="index" open="("
+			separator="," close=")">#{item}
+		</foreach>		
+		OR pid in 
+		<foreach collection="removeTypeIds" item="item" index="index" open="("
+			separator="," close=")">#{item}
+		</foreach>				
+		)
+	)	
+	ORDER BY orderIdx desc 
+  </select>
+  
+  
+  
+  
+   <!-- 获取 受限的，排除e备课不能使用的部分(类型)的备课夹内容列表(其中缩略图、文件后缀需要工具类继续处理)，排除网络资源 --> 
+  <select id="queryLimitedPrepareContentListWithoutNet" resultMap="viewPrepareContMap" > 
+  	select  id,title,resId,fromFlag,unifytype,size,timeline,time,imgpath,filesuffix from  (	
+		select  t.id ,a.id as resId,a.name as title,a.createTime as time,1 as fromFlag,p.id as unifyTypeId
+		,p.MType as  unifyType,a.AssetSize as size,'' as timeline,a.AssetPath as imgPath ,'' as fileSuffix,t.orderIdx
+		from  j_prepare_content  t  
+		LEFT JOIN z_asset a on a.id = t.contId 
+		LEFT JOIN x_resourcetype p  on p.id = a.unifyTypeId
+		where t.preid = #{prepareId}  and t.flag = false  and t.contType in (1,9)
+		and a.flag =false and a.FileType = 'A' and a.islocal = 0 
+		
+		UNION ALL
+		
+		select t.id,z.Id as resId,z.title,z.CreateDT  as  time,0 as fromFlag,p.id as unifyTypeId
+		,p.MType as  unifyType,z.FSize as size,IFNULL(m.res_time,'') as  timeline ,CONCAT(z.FPath,'/',z.Fname) as imgPath ,'' as fileSuffix,t.orderIdx		
+		from  j_prepare_content  t  
+		LEFT JOIN z_resource  z on t.contId = z.Id
+		LEFT JOIN x_resourcetype p  on p.id = z.MType
+		LEFT JOIN z_res_medium m on m.res_code = z.ResCode
+		where t.preid =   #{prepareId}  and t.flag = false  and t.contType in (2,10)
+		and z.flag = false and z.islocal = 1    
+		
+		UNION ALL 
+		
+		select t.id,r.id as resId,r.title,r.CreateDT as time ,fromFlag as fromFlag,p.id as unifyTypeId
+		,p.MType as unifyType,r.FSize as size,'' as timeline,r.fullpath as imgPath ,'' as fileSuffix,t.orderIdx
+		from  j_prepare_content  t  
+		LEFT JOIN z_districts_resource r on r.id = t.contId
+		LEFT JOIN x_resourcetype p on p.id = r.mtype
+		where t.preid =  #{prepareId}  and t.flag = false  and t.contType in (11,12)
+		and r.flag = false 	 and r.islocal = 1 	
+	)temp_result 	
+	where temp_result.unifyTypeId NOT IN (
+		select id from x_resourcetype where  (		
+		id in 
+		<foreach collection="removeTypeIds" item="item" index="index" open="("
+			separator="," close=")">#{item}
+		</foreach>		
+		OR pid in 
+		<foreach collection="removeTypeIds" item="item" index="index" open="("
+			separator="," close=")">#{item}
+		</foreach>				
+		)
+	)	
+	ORDER BY orderIdx desc 
+  </select>
+  
+    
+   <!-- 简版资源的信息，用于获取播放或下载路径 -->
+   <resultMap id="simpleResInfo" type="net.tfedu.zhl.cloud.resource.prepare.entity.ResourceSimpleInfo"> 		
+   	  <result column="resid" property="resid"/>
+      <result column="rescode"  property="rescode" />
+      <result column="title"  property="title" />
+      <result column="fromflag" property="fromflag" />
+      <result column="isnet" property="isnet" />
+      <result column="isdwj" property="isdwj" />
+      <result column="path"  property="path" />
+      <result column="isebook" property="isebook" />
+      <result column="fileext" property="fileext"/>
+   </resultMap>
+  
+  
+  <!--  获取自建资源的信息 -->
+  <select id="getAssetInfo" resultMap="simpleResInfo">
+  	select  id as resid,name as title,resourceid as rescode, 1 as fromflag,islocal as isnet,iswjb as isdwj
+  	,assetpath as path,0 as isebook,'' as fileext   from z_asset 
+  	where id = #{0} and filetype = 'A' and flag = false 
+  </select>
+  <!--  获取系统资源的信息 -->
+  <select id="getResourceInfo" resultMap="simpleResInfo">
+  	select id as resid,title,rescode,0 as fromflag , 0 isnet ,isdwj,concat(fpath,'/',fname) as path
+  	,IF(fromflag=2 and mtype=40  and LOCATE('.html',fname)>0,1,0) as isebook,fileext
+  	from z_resource
+  	where flag = false and id = #{0}
+  </select>
+  <!-- 获取区校本资源的信息 -->
+  <select id="getDistrictORSchoolResInfo" resultMap="simpleResInfo">
+  	select id as resid,title, rescode,fromflag,!islocal as  isnet,isdwj as isdwj,fullpath as path,0 as isebook 
+  	,'' as fileext 
+  	from z_districts_resource  where flag = false and id = #{0}  
+  </select>
+  
+  
+  
+  
+  
+  
+    
+    
+   <!-- 简版资源的信息，用于获取播放或下载路径 -->
+   <resultMap id="prepareStatisMap" type="net.tfedu.zhl.cloud.resource.prepare.entity.UserPrepareStatisInfo"> 		
+      <result column="tfcode"  property="tfcode" />
+      <result column="title"  property="title" />
+      <result column="preparenums" property="prepareNums" />
+      <result column="resourcenums" property="resourceNums" />
+      <result column="nodefinishednums" property="nodeFinishedNums" />
+      <result column="nodeomitnums"  property="nodeOmitNums" />
+   </resultMap>
+  	
+  
+  <!--  获取用户的备课夹统计(部分)  -->
+<!-- 	<select id="getUserPrepareStatisButPartResult" resultMap="prepareStatisMap" parameterType="Long">
+		select  s.tfcode,s.Name as title
+		from 
+			(SELECT DISTINCT LEFT(t.tfcode,10) as tfcode 
+			
+			FROM
+				j_lession_prepare t
+			WHERE
+				LENGTH(t.tfcode)>=10  and t.flag =false 
+			AND t.userid = #{userId} )temp
+		LEFT JOIN j_syscourse s on temp.tfcode = s.tfcode
+		where s.flag = false
+  </select>
+   -->
+   <select id="getUserPrepareStatisButPartResult" resultMap="prepareStatisMap" parameterType="Long">
+		select  s.tfcode,CONCAT(s2.name,'-', IF(p.bookname is null ,s.Name,p.bookname) ) as title
+		from 
+			(SELECT DISTINCT LEFT(t.tfcode,10) as tfcode 
+			
+			FROM
+				j_lession_prepare t
+			WHERE
+				LENGTH(t.tfcode)>=10  and t.flag =false 
+			AND t.userid = #{userId} )temp
+		LEFT JOIN j_syscourse s on temp.tfcode = s.tfcode
+		LEFT JOIN j_producttfcodecontrast p on p.tfcode = s.tfcode 	
+		LEFT JOIN  j_syscourse s2 on s2.id = s.PnodeId	
+		where s.flag = false and p.procode = 'zy' 
+		ORDER BY s.orderNum,p.orderNo
+  </select>
+  
+  <select id="getBookPrepareStatis" resultMap="prepareStatisMap" >
+  	SELECT   preparenums,resourcenums,nodefinishednums,(nodeallnumbers-nodefinishednums) as nodeomitnums from (
+		select  sum(1) as nodeallnumbers,sum(prenum) as preparenums 
+			,sum(if(prenum=0,0,1)) as nodefinishednums,sum(resnum) as resourcenums
+		from (
+			SELECT 	id,tfcode
+			,(select count(1) from j_lession_prepare t where t.tfcode = p.tfcode  and userid =#{userId} and flag =FALSE ) as prenum
+			,(select count(c.id) from j_lession_prepare t,j_prepare_content c where t.tfcode = p.tfcode and t.flag =false 
+									and userid = #{userId} and t.id = c.preId and c.flag = false and c.contType in (1,2,9,10,11,12) ) as resnum 
+			FROM
+				j_syscourse p
+			WHERE
+				tfcode LIKE #{tfcode}
+			AND flag = FALSE 
+		)temp 
+	)tep2
+  </select>
+  
+  
+  
+      <!-- 获取最新更新的备课夹（3个）-->
+  <select id="getLatestPrepare" resultMap="viewResultMap" parameterType="Long">
+  	SELECT
+	id,
+	title,
+	'' as timeLabel
+	,(select  COUNT(1) from j_prepare_content c where c.flag = false and c.preId =p.id and c.contType in (1,2,9,10,11,12) ) as contentnumber
+	FROM
+		j_lession_prepare p
+	WHERE flag = false 
+	AND userid = #{userId} ORDER BY updatetime desc limit 3 
+  </select>
+  
+ 
+ <!-- 查询标题是否重名 -->
+ <select id="getRepeatTimes" resultType="Integer">
+ 	select  count(1) as num from j_lession_prepare where userid =#{userId} and flag = false and title =#{title} and tfcode =#{tfcode}
+ </select>
+ 
+  
+ <!-- 查询标题是否重名 -->
+ <select id="getAllRepeatTimes" resultType="Integer">
+ 	select  count(1) as num from j_lession_prepare where userid =#{userId} and flag = false and title like #{title}
+ </select>
+ 
+ 
+ <!--  获取备课夹在其所在节点下的下标信息 -->
+ <select id="getPrepareIndxInfo" resultType="Integer">
+ 	
+	select  rowno from (
+	select   (@rowNO := @rowNo+1) AS rowno,a.tfcode,a.id from (
+	select tfcode,id  from  j_lession_prepare where tfcode =#{tfcode}  ORDER BY  updatetime desc 
+	) a,(select @rowNO :=0) b 
+	)temp
+	 where temp.id =#{prepareId} 
+ </select>
+ 
+ 
+ <select id="getNodeInfo" parameterType="String" resultType="HashMap">
+	select 
+	(select edi.id from j_syscourse edi where edi.termid = s.TermId and edi.subjectid = s.SubjectId and edi.flag = false and edi.pnodeid = 0 and LOCATE(edi.tfcode,s.tfcode) > 0 )editionid
+	,(select book.id from j_syscourse book where book.pnodeid = editionId and s.flag = false and LOCATE(book.tfcode,s.tfcode) > 0 )bookid 
+	from j_syscourse s WHERE s.tfcode =#{tfcode};
+ </select>
+ 
+ 
+</mapper>

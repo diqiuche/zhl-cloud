@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.userinfo.dao.JUserInfoMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.userinfo.entity.JUserInfo" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="UserId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="ScoureSum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="OperateScore" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="GiveScore" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="GetScore" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="AnswerScore" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="PublishCnt" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="ResponseCnt" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="Address" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Duty" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="StarCount" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="IsVisible" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="ForumType" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="IdCard" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="IdType" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="BirthDate" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="MobileNumber" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="PhoneNumber" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="QQ" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="MSN" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="PhPage" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Deskpic" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="UserImage" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Music" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="IsSee" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="Qascore" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="forumPartNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="forumTopicNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="forumItemNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="forumReItemNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="forumOpinionNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="forumFlowerNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="Resume" jdbcType="LONGVARCHAR" javaType="java.lang.String" />
+    </constructor>
+  </resultMap>
+</mapper>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.productUpdate.dao.VersionFilesMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.productUpdate.entity.VersionFiles" >
+       <result column="filename" property="filename" />
+       <result column="address" property="address" />
+       <result column="location" property="location" />
+       <result column="filetype" property="filetype" />
+       <result column="filesize" property="filesize" />
+       <result column="isreg" property="isreg" />
+       <result column="deccompressfile" property="deccompressfile" />
+
+  </resultMap>
+  <!-- 根据productCode，productType，versioncode，查询当前版本之后的所有版本信息 -->
+  <select id="allUpdatedFilesByCode" resultMap="BaseResultMap">
+     select filename,address,location,filetype,filesize,isreg,deccompressfile 
+     from versionfiles a 
+     left join productversion b on a.versionid = b.versionid
+     left join production c on c.productcode = b.productcode
+     where b.versioncode > #{versionCode} and b.productcode = upper(#{productCode}) and c.productType = #{productType}
+     order by a.createtime desc
+  </select>
+  
+  <!-- 根据productCode，productType，versionname，查询当前版本之后的所有版本信息 -->
+  <select id="allUpdatedFilesByName" resultMap="BaseResultMap">
+     select filename,address,location,filetype,filesize,isreg,deccompressfile 
+     from versionfiles a 
+     left join productversion b on a.versionid = b.versionid
+     left join production c on c.productcode = b.productcode
+     where b.versionname > #{versionName} and b.productcode = #{productCode} and c.productType = #{productType}
+     order by a.createtime desc
+  </select>
+</mapper>

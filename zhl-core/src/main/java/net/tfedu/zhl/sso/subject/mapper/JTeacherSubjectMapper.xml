@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.subject.dao.JTeacherSubjectMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.subject.entity.JTeacherSubject" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="UserId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="SubjectId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+  </resultMap>
+  
+  <update id="udpateTeacherSubject">
+  		update  j_teachersubject set subjectid =#{1} where userid =#{0}  and flag = false
+  </update>
+  
+  
+  <update id="removeRepeatData" parameterType="Long">
+  	update j_teachersubject t1 
+  	,(select  MAX(t2.id) as id,t2.userid,t2.SubjectId from j_teachersubject t2 where t2.userid =#{userId} and t2.flag = false GROUP BY t2.userid,t2.SubjectId) t3 
+	set t1.flag = true where  t1.userid = #{userId} and t1.flag = false and t1.id != t3.id
+  </update>
+  
+  
+</mapper>

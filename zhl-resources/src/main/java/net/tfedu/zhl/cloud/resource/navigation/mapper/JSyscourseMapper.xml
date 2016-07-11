@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.navigation.dao.JSyscourseMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.navigation.entity.JSyscourse" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="SubjectId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="TermId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="PnodeId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="Name" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="TFcode" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="IsArea" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="FirstPage" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="EndPage" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="ResourceId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="EbookPath" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="EbookDic" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="typeFlag" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="orderNum" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="visible" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="Grade" jdbcType="SMALLINT" javaType="java.lang.Short" />
+      <arg column="UpdateTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="CreateDT" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="createtime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="isSpec" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="enabled" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="createman" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="scopeType" jdbcType="INTEGER" javaType="java.lang.Integer" />
+    </constructor>
+  </resultMap>
+  
+   <!-- 根据学段、学科，获得所有教材版本，查询的第一个为 “课标版” -->
+   <resultMap id="EditionResultMap" type="net.tfedu.zhl.cloud.resource.navigation.entity.JSyscourse" >
+		<id column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="tfcode" property="tfcode" />
+  </resultMap>
+  <select id="getAllEditions" parameterType="HashMap" resultMap="EditionResultMap">
+    select id,name,tfcode from(
+  	select s.id,replace(s.Name,CONCAT(j.name,sub.name),'') as name,tfcode from j_syscourse s
+	LEFT JOIN j_term j on s.termId = j.id
+	LEFT JOIN j_subject sub on s.subjectId = sub.id
+	where s.termid =#{termId} and s.subjectid =#{subjectId} and s.flag = false and j.flag = false and sub.flag = false and s.pnodeid = 0 
+	and tfcode in (select DISTINCT left(tfcode,8) as tfcode from j_producttfcodecontrast) ORDER BY s.orderNum asc,s.id DESC)tmp 
+	where name is not null and name != ''  
+  </select>
+   <select id="getAllEditions2" parameterType="HashMap" resultMap="EditionResultMap">
+    select id,name,tfcode,ordernum from(
+  	select s.id,s.name,tfcode,s.ordernum from j_syscourse s
+	LEFT JOIN j_term j on s.termId = j.id
+	LEFT JOIN j_subject sub on s.subjectId = sub.id
+	where s.termid =#{termId} and s.subjectid =#{subjectId} and s.flag = false and j.flag = false and sub.flag = false and s.pnodeid = 0 
+	and tfcode in (select DISTINCT left(tfcode,8) as tfcode from j_producttfcodecontrast) ORDER BY s.orderNum asc,s.id DESC)tmp 
+	where name is not null and name != ''  
+  </select>
+  <!-- 根据所属版本和产品编码，查询所有的教材 -->
+  <resultMap id="BooksResultMap"   type="net.tfedu.zhl.cloud.resource.navigation.entity.JSyscourse" >
+		<id column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="tfcode" property="tfcode" />
+  </resultMap>
+  <select id="getAllBooks" parameterType="HashMap" resultMap="BooksResultMap">
+  
+	select s.id, case when bookname is NULL then s.Name
+	else bookname end as name, s.tfcode from j_syscourse s
+	LEFT JOIN j_producttfcodecontrast jp on s.tfcode = jp.tfcode
+	where pnodeid =#{pnodeId} and s.flag = false and proCode = #{proCode} order by orderNo
+
+  </select>
+  
+  <!-- 查询某父节点下的直接子节点(即不包含孙子节点等) -->
+  <resultMap id="TopChildrenResultMap" type="net.tfedu.zhl.cloud.resource.navigation.entity.TreeNode" >
+		<id column="id" property="id" />
+		<result column="label" property="label" />
+		<result column="tfcode" property="tfcode" />
+  </resultMap>
+  <select id="getTopChildrenResultMap" parameterType="Long" resultMap="TopChildrenResultMap">
+		select id,name label,tfcode from j_syscourse where pnodeid =#{pnodeId} and visible = 1 and typeFlag in (0,1) and flag = false order by orderNum
+  </select>
+  
+  <!-- 根据id，查询一课程信息  -->
+  <select id="getOneCourseInfo" resultMap="TopChildrenResultMap">
+    select s.id, case when bookname is NULL then s.Name
+	else bookname end as label, s.tfcode from j_syscourse s
+	LEFT JOIN j_producttfcodecontrast jp on s.tfcode = jp.tfcode
+	where s.id =#{id} and s.flag = false and proCode =#{proCode} and s.visible = 1 and s.typeFlag in (0,1) 
+  </select>
+  
+  
+  
+  
+  
+  <resultMap type="net.tfedu.zhl.cloud.resource.navigation.entity.CourseViewTk" id="courseTreeInfoTK">
+  	<id column="cour_id" property="cour_id"/>
+  	<result  column="cour_pid" property="cour_pid"/>
+  	<result  column="cour_tf_code" property="cour_tf_code"/>
+  	<result  column="cour_name" property="cour_name"/>
+  </resultMap>
+  
+  
+  <!--获取具体的版本下的教材 -->
+  <select id="getProductTfcode" resultType="String">
+ 	 select tfcode  from j_producttfcodecontrast ts where  proCode =#{proCode} and  tfcode like #{tfcode}  ORDER BY orderno
+  </select>
+  
+   <!-- 根据教程结点tfcode，获取全部节点的详细信息   -->
+  <select id="getAllCourseTreeInfo" resultMap="courseTreeInfoTK">
+  	select  * from (
+			 select  id as cour_id,pnodeid as cour_pid,tfcode as cour_tf_code, if(bookname is null,name,bookname)  as cour_name from (
+			  select s.id , s.name, s.tfcode ,s.pnodeId
+			  ,(select ts.bookname from j_producttfcodecontrast ts where ts.tfcode = s.TFcode and proCode =#{proCode} )  bookname
+			  from j_syscourse s
+				where s.tfcode like #{tfcode} 
+			   and s.typeFlag in (0,1)
+				ORDER BY TFcode,orderNum
+			)temp
+			)ttt2
+  </select>
+ 
+ 
+ 
+ 
+  <resultMap type="net.tfedu.zhl.cloud.resource.navigation.entity.KonwladgeViewTk" id="knowladgeInfoTK">
+  	<id column="know_id" property="know_id"/>
+  	<result  column="know_name" property="know_name"/>
+  	<result  column="know_code" property="know_code"/>
+  	<result  column="term_id" property="term_id"/>
+  	<result  column="subj_id" property="subj_id"/>
+  </resultMap>
+ 
+ 
+   <!-- 获取学段、学科下的知识点   -->
+  <select id="getKnowladgeTree" resultMap="knowladgeInfoTK">
+		select 
+		 s.id as know_id,s.name as know_name ,s.tfcode as know_code, s.TermId as term_id,s.SubjectId as subj_id
+		 from j_syscourse s where s.isKnowledge = 1  and termid = #{term_id} and SubjectId =  #{subj_id} and flag = false 
+		and  11 > LENGTH(TFcode);
+  </select>
+ 
+ 
+ 
+  <!-- 开启二级缓存 -->
+  <cache
+        eviction="FIFO"
+        flushInterval="60000"
+        size="512"
+        readOnly="true" />
+</mapper>

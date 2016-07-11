@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.grade.dao.GradeMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.grade.entity.Grade" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="SchoolId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="TermId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="Name" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="ClassName" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="NickName" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Manager" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="CreateMan" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Status" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Year" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="CreateTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="IsFlag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="IsChank" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="DeleteTime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="Note" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="ChannelLimit" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="forumPartNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="forumTopicNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="forumItemNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="forumReItemNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="forumOpinionNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="studyTermId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="districtId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="isThree" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="stuNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="ClassImage" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="isRead" jdbcType="INTEGER" javaType="java.lang.Integer" />
+    </constructor>
+  </resultMap>
+  
+  
+  
+  <select id="queryGradeBySchoolId" resultMap="BaseResultMap">
+  	 SELECT * FROM j_grade where schoolid = #{schoolId} and flag= FALSE and IsChank = 1 
+  </select>
+  
+  
+  
+  <resultMap type="net.tfedu.zhl.sso.grade.entity.GradeAreaInfo" id="gradeAreaInfoMap">
+  	<result property="districtname"  column="districtname"/>
+  	<result property="cityname"  column="cityname"/>
+  	<result property="provincename"  column="provincename"/>
+  	<result property="schoolname"  column="schoolname"/>
+  </resultMap>
+  
+  
+  <select id="getGradeAreaInfo" resultMap="gradeAreaInfoMap">
+		select  s.name as schoolname,q.name as districtname,c.name as cityname,p.name as provincename from  j_grade g 
+		LEFT JOIN j_school s on s.id = g.schoolid
+		LEFT JOIN q_district  q  on  q.id = s.districtId
+		LEFT JOIN q_city  c on c.id = q.CityId
+		LEFT JOIN q_province p on p.id = c.ProvinceId
+		where g.id  = #{classId}
+  </select>
+  
+</mapper>

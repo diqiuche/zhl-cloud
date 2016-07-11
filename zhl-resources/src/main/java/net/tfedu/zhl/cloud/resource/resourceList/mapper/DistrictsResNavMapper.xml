@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.resourceList.dao.DistrictsResNavMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.resourceList.entity.DistrictsResNav" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="ResCode" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="StructCode" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="SysCourseId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+  </resultMap>
+  
+  
+  
+  <insert id="insertWithoutSyscourseId" parameterType="net.tfedu.zhl.cloud.resource.resourceList.entity.DistrictsResNav">
+  	insert into z_districts_resnav(rescode,structcode,syscourseid)
+	select #{rescode},#{structcode},id from j_syscourse where flag =false and tfcode =#{structcode}
+  </insert>
+</mapper>

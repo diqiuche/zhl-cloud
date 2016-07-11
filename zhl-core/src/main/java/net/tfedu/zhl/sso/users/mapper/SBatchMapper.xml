@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.tfedu.zhl.sso.users.dao.SBatchMapper">
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.users.entity.SBatch">
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor>
+      <idArg column="Id" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="BatchName" javaType="java.lang.String" jdbcType="CHAR" />
+      <arg column="CreateTime" javaType="java.util.Date" jdbcType="TIMESTAMP" />
+      <arg column="NumberCard" javaType="java.lang.Integer" jdbcType="INTEGER" />
+      <arg column="Remark" javaType="java.lang.String" jdbcType="CHAR" />
+      <arg column="Flag" javaType="java.lang.Boolean" jdbcType="BIT" />
+    </constructor>
+  </resultMap>
+</mapper>

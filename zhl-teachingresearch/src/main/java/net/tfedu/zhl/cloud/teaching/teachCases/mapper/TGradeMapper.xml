@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.teaching.teachCases.dao.TGradeMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.teaching.teachCases.entity.TGrade" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="name" jdbcType="VARCHAR" javaType="java.lang.String" />
+    </constructor>
+  </resultMap>
+  
+  <!-- 查询所有的年级 -->
+  <select id = "getAllGrades" resultType="net.tfedu.zhl.cloud.teaching.teachCases.entity.TGrade">
+     select id,name from t_grade;
+  </select>
+</mapper>

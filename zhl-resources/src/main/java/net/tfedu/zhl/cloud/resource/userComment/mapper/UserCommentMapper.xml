@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.userComment.dao.UserCommentMapper" >
+  
+  <!-- 查询评论返回的结果集 -->
+  <resultMap id="comments" type="net.tfedu.zhl.cloud.resource.userComment.entity.UserComment">
+        <id column="id" property="id" />
+		<result column="userid" property="userid" />
+		<result column="acontent" property="acontent" />
+		<result column="atime" property="atime" />
+  </resultMap>
+  
+  <!-- 我的评论 -->
+  <select id="getMyComments" parameterType="HashMap" resultMap="comments">
+      select id,userid,acontent,atime from z_assetevaluate 
+      where flag = 0 and IsScore = 1 and Atype = #{fromFlag} and AssetId = #{resId} and userId = #{userId} 
+  </select>
+  
+   <!-- 他人评论 -->
+  <select id="getOtherComments" parameterType="HashMap" resultMap="comments">
+      select id,userid,acontent,atime from z_assetevaluate 
+      where flag = 0 and IsScore = 1 and Atype = #{fromFlag} and AssetId = #{resId} and userId != #{userId}  
+  </select>
+  
+  <!-- 修改评论 -->
+  <update id="updateComment" parameterType="HashMap" >
+      update z_assetevaluate set acontent = #{displayContent} where id = #{commentId}
+  </update>
+  
+   <!-- 删除评论 -->
+  <update id="deleteComment" parameterType="Long">
+      update z_assetevaluate set flag = true where id = #{commentId}
+  </update>
+  
+  <!-- 插入一条用户评论 -->
+  <insert id="insertMyComment"  parameterType="HashMap">
+      insert into z_assetevaluate (assetid,userid,acontent,ascore,atype,atime,flag,IsScore) 
+      values(#{resId},#{userId},#{displayContent},#{ascore},#{fromFlag},now(),false,#{isScore})
+  </insert>
+  
+  <!-- 插入一条用户评分 -->
+  <insert id="insertMyScore"  parameterType="HashMap">
+      insert into z_assetevaluate (assetid,userid,ascore,atype,atime,flag,IsScore) 
+      values(#{resId},#{userId},#{ascore},#{fromFlag},now(),false,#{isScore})
+  </insert>
+
+</mapper>

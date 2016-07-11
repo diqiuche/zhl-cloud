@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.tfedu.zhl.sso.users.dao.SCardMapper">
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.users.entity.SCard">
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor>
+      <idArg column="Id" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="BatchId" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="CardNumber" javaType="java.lang.String" jdbcType="CHAR" />
+      <arg column="CardPwd" javaType="java.lang.String" jdbcType="CHAR" />
+      <arg column="CreateTime" javaType="java.util.Date" jdbcType="TIMESTAMP" />
+      <arg column="CreateMan" javaType="java.lang.String" jdbcType="CHAR" />
+      <arg column="RoleId" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="RegistKeyType" javaType="java.lang.String" jdbcType="CHAR" />
+      <arg column="StartTime" javaType="java.util.Date" jdbcType="TIMESTAMP" />
+      <arg column="EndTime" javaType="java.util.Date" jdbcType="TIMESTAMP" />
+      <arg column="state" javaType="java.lang.Integer" jdbcType="INTEGER" />
+      <arg column="Exp_num" javaType="java.lang.Integer" jdbcType="INTEGER" />
+      <arg column="Section" javaType="java.lang.String" jdbcType="CHAR" />
+      <arg column="PositionId" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="DisPositionId" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="Flag" javaType="java.lang.Boolean" jdbcType="BIT" />
+      <arg column="Count" javaType="java.lang.Integer" jdbcType="INTEGER" />
+      <arg column="cityId" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="provinceId" javaType="java.lang.Long" jdbcType="BIGINT" />
+    </constructor>
+  </resultMap>
+</mapper>

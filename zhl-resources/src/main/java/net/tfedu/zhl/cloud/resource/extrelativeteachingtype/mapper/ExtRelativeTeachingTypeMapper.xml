@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.extrelativeteachingtype.dao.ExtRelativeTeachingTypeMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.extrelativeteachingtype.entity.ExtRelativeTeachingType" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="extension" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="teachingtype" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="isDefault" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="MaxSize" jdbcType="INTEGER" javaType="java.lang.Integer" />
+    </constructor>
+  </resultMap>
+  
+  
+  <resultMap type="net.tfedu.zhl.cloud.resource.poolTypeFormat.entity.FirstLevelResType" id="firstLevelResTypeMap">
+        <id column="id" property="id" />
+	   <result column="mtype" property="mtype" />
+	   <result column="code" property="code" />
+  </resultMap>
+  
+  
+  <!-- 根据文件的后缀获取资源类型  -->
+  <select id="getTypeForExt" parameterType="String" resultMap="firstLevelResTypeMap">
+  
+		  SELECT
+			p.id,p.mtype,p.code
+		FROM
+			j_extrelativeteachingtype t
+		LEFT JOIN x_resourcetype p on t.teachingtype = p.code
+		WHERE
+			t.extension = #{ext}
+		ORDER BY isDefault desc 
+  
+  </select>
+  
+  
+</mapper>

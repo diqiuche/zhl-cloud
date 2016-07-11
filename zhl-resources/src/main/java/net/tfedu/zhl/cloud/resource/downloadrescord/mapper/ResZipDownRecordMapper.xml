@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.downloadrescord.dao.ResZipDownRecordMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.downloadrescord.entity.ResZipDownRecord" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="userid" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="fromflags" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="zippath" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="zipname" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="status" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="ids" jdbcType="LONGVARCHAR" javaType="java.lang.String" />
+    </constructor>
+  </resultMap>
+  
+  
+  
+  
+   <!-- 资源内容前端展示信息 -->
+   <resultMap id="viewPrepareContMap" type="net.tfedu.zhl.cloud.resource.prepare.entity.JPrepareContentView"> 		
+      <id column="id" property="id" />
+      <result column="title"  property="title" />
+      <result column="resid"  property="resId" />
+      <result column="fromflag" property="fromFlag" />
+      <result column="unifytype" property="unifyType" />
+      <result column="size" property="size" />
+      <result column="timeline" property="timeline" />
+      <result column="time"  property="time" />
+      <result column="imgpath"  property="imgPath" />
+      <result column="filesuffix" property="fileSuffix" />
+   </resultMap>
+  
+   <!--获取下载记录中的资源 -->
+  <select id="getMydownload" resultMap="viewPrepareContMap" > 	
+  	 SELECT id,title,resId,fromFlag,unifytype,size,timeline,time,imgpath,filesuffix from  (
+		SELECT t.id ,t.resid,t.fromflag,CONCAT(t.downdate,' ',t.downtime)as time,p.id as unifyTypeId
+			,a.name as title,p.MType as  unifyType,a.AssetSize as size,'' as timeline,a.AssetPath as imgPath 
+		  ,REVERSE(LEFT(REVERSE(AssetPath),LOCATE('.',REVERSE(AssetPath))-1))  as fileSuffix,0 as orderIdx
+		FROM z_resdown_record t 
+		LEFT JOIN z_asset a on a.id = t.resId
+		LEFT JOIN x_resourcetype p  on p.id = a.unifyTypeId	
+		WHERE t.userid = #{userId}   and t.fromflag IN (1,2)
+		and a.flag = FALSE and a.filetype = 'A'
+		
+		UNION ALL
+		select  t.id ,t.resid,t.fromflag,CONCAT(t.downdate,' ',t.downtime)as time ,p.id as unifyTypeId
+		,z.title,p.MType as  unifyType,z.FSize as size,IFNULL(m.res_time,'') as  timeline,CONCAT(z.FPath,'/',z.Fname) as imgPath 
+		,REVERSE(LEFT(REVERSE(fname),LOCATE('.',REVERSE(fname))-1)) as fileSuffix,0 as orderIdx		
+		FROM
+		z_resdown_record t 
+		LEFT JOIN z_resource z on t.resid = z.Id
+		LEFT JOIN x_resourcetype p  on p.id = z.MType
+		LEFT JOIN z_res_medium m on m.res_code = z.ResCode
+		WHERE t.userid = #{userId}    and t.fromflag= 0 
+		and z.flag = FALSE 
+		
+		UNION ALL
+		select  t.id ,t.resid,t.fromflag,CONCAT(t.downdate,' ',t.downtime)as time ,p.id as unifyTypeId
+		,r.title,p.MType as unifyType,r.FSize as size,'' as timeline,r.fullpath as imgPath 
+		,REVERSE(LEFT(REVERSE(fname),LOCATE('.',REVERSE(fname))-1)) as fileSuffix,0 as orderIdx
+		FROM
+		z_resdown_record t 
+		LEFT JOIN z_districts_resource r on r.id = t.resid
+		LEFT JOIN x_resourcetype p on p.id = r.mtype
+		WHERE t.userid = #{userId}    and t.fromflag in (3,4)
+		)temp_result  
+	where  1 =1 
+	
+	<if test="unifyTypeId>0">
+		and EXISTS ( select  id from x_resourcetype  where (id = #{unifyTypeId} or pid = #{unifyTypeId}>0 )and flag =false and id = temp_result.unifyTypeId )
+	</if>
+	
+	<if test=" (fileFormat !='' and fileFormat !=null and fileFormat!='全部' and fileFormat!='all') ">
+		and EXISTS (select FormatCode from j_filetypedetail where flag = false  and FileFormat =#{fileFormat} and FormatCode = CONCAT('.',temp_result.filesuffix))
+	</if>
+	
+	ORDER BY time desc
+  	
+  </select>
+  
+  
+</mapper>

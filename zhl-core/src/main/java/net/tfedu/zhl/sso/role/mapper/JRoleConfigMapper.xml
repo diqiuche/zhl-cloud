@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.role.dao.JRoleConfigMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.role.entity.JRoleConfig" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="RoleId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="FuncId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="model" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="tag" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+  </resultMap>
+</mapper>

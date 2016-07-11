@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.poolTypeFormat.dao.FileFormatMapper" >
+       
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.poolTypeFormat.entity.FileFormat" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="FormatCode" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="FileFormat" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="TypeDesc" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="OrderNum" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+  </resultMap>
+  
+  <!-- 系统资源，查询资源格式，文本，图片... -->
+  <resultMap id="FileFormatsResultMap"  type="String">
+       <result column="FileFormat" property="fileformat" />
+  </resultMap>
+  <select id="getSysResFormatsByMType"  resultMap="FileFormatsResultMap" >
+  select DISTINCT b.FileFormat
+  from z_resource a 
+  left join z_resnav c on a.ResCode=c.ResCode
+  left join j_syscourse d on c.StructCode=d.tfcode 
+  left join j_filetypedetail b on LOWER(REVERSE(LEFT(REVERSE(a.fname),LOCATE('.',REVERSE(a.fname))))) = b.FormatCode
+  where a.flag = 0 and d.flag = 0 and c.StructCode like CONCAT(#{tfcode},'%') and FileFormat is not null and a.fromFlag in 
+       <foreach item="item" index="index" collection="sys_from" 
+                         open="(" separator="," close=")">
+                         #{item}
+       </foreach>
+       <if test="typeIds.size() == 0">
+         and a.mtype in ('')
+       </if>
+       <if test="typeIds.size() > 0">
+         and a.mtype in <foreach item="item" index="index" collection="typeIds" 
+                         open="(" separator="," close=")">
+                         #{item}
+                 </foreach>
+       </if>
+  </select>
+  
+  <!-- 区本校本资源，查询资源格式，文本，图片... -->
+  <select id="getDisResFormatsByMType"  resultMap="FileFormatsResultMap">
+  select DISTINCT b.FileFormat
+  from z_districts_resource a 
+  left join z_districts_resnav c on a.ResCode=c.ResCode
+  left join j_syscourse d on c.StructCode=d.tfcode 
+  left join j_filetypedetail b on LOWER(REVERSE(LEFT(REVERSE(a.fname),LOCATE('.',REVERSE(a.fname))))) = b.FormatCode
+  where a.flag = 0 and d.flag = 0 and c.StructCode like CONCAT(#{tfcode},'%') and FileFormat is not null and a.fromFlag = #{fromFlag} 
+   <if test="fromFlag == 3">
+         and a.scopeId = #{schoolId} and a.scope = 5 
+    </if>
+    <if test="fromFlag == 4">
+         and a.scopeId = #{districtId} and a.scope = 4 
+    </if>
+  and a.mtype in (
+  SELECT b.id type_id from x_resourcetype b where b.flag=0 
+    <if test="mtype != 0">
+      and (b.id = #{mtype} or b.pid = #{mtype})
+    </if> 
+  )
+  </select>
+
+  <select id="getAllFileFormat" resultType="String">
+  		select  distinct fileformat as fileformat  from j_filetypedetail where flag = false order by ordernum 
+  </select>
+  
+  
+</mapper>

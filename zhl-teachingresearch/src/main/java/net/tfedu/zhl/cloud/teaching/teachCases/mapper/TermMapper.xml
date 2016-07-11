@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.teaching.teachCases.dao.TermMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.teaching.teachCases.entity.Term" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="name" jdbcType="VARCHAR" javaType="java.lang.String" />
+    </constructor>
+  </resultMap>
+  
+  <!-- 查询学段下的学科 -->
+  <select id = "getSubjectsByTerm" resultType="net.tfedu.zhl.cloud.teaching.teachCases.entity.TSubject">
+     select c.id,c.name from t_term a
+     left join t_term_subject b on a.id = b.termId
+     left join t_subject c on b.subjectId = c.id
+     where a.id = #{termId}
+  </select>
+  
+  <!-- 查询所有学段 -->
+  <select id = "getAllTerms" resultType="net.tfedu.zhl.cloud.teaching.teachCases.entity.Term">
+    select id,name from t_term;
+  </select>
+  
+</mapper>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.sso.district.dao.DistrictMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.sso.district.entity.District" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="Id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="CityId" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Code" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Name" jdbcType="CHAR" javaType="java.lang.String" />
+      <arg column="Flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+    </constructor>
+  </resultMap>
+  
+  <resultMap id="resultDis" type="net.tfedu.zhl.sso.district.entity.DistrictEntity">
+       <result column="dist_id" property="dist_id" />
+       <result column="dist_name" property="dist_name" />
+  </resultMap>
+  
+  <!-- 查询市下的区 -->
+  <select id ="queryDistirctByCityId" resultMap="resultDis">
+    select dist_id,dist_name from 
+    (select id as dist_id ,name as dist_name from q_district where cityId=#{cityId} and flag=0 
+    )a 
+  </select>
+  
+  
+  <select id="queryDistirctByCityIdANDName" resultMap="BaseResultMap">
+  	select * from q_district where  CityId = #{cityId} and  name =#{name}  and flag =false  ORDER BY id 
+  </select>
+</mapper>

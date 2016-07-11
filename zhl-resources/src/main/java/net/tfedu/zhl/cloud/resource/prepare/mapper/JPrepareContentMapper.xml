@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="net.tfedu.zhl.cloud.resource.prepare.dao.JPrepareContentMapper" >
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.prepare.entity.JPrepareContent" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor >
+      <idArg column="id" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="createtime" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="preId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="contId" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="contType" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="flag" jdbcType="BIT" javaType="java.lang.Boolean" />
+      <arg column="orderIdx" jdbcType="INTEGER" javaType="java.lang.Integer" />
+    </constructor>
+  </resultMap>
+  
+  
+  
+  <!-- 将指定资源从我的备课夹中清除 -->
+  <update id="removeMyPrepareContentResource">
+  	
+	update j_prepare_content t set flag = true where contid =#{1} and conttype =#{2}  and EXISTS 
+	( select id from  j_lession_prepare p where p.userid = #{0} and t.preid = p.id
+	)
+  </update>
+  
+  
+  
+  
+  
+   <!-- 备课夹内容前端展示信息 -->
+   <resultMap id="viewPrepareContMap" type="net.tfedu.zhl.cloud.resource.prepare.entity.JPrepareContentView"> 		
+      <id column="id" property="id" />
+      <result column="title"  property="title" />
+      <result column="resid"  property="resId" />
+      <result column="fromflag" property="fromFlag" />
+      <result column="unifytype" property="unifyType" />
+      <result column="size" property="size" />
+      <result column="timeline" property="timeline" />
+      <result column="time"  property="time" />
+      <result column="imgpath"  property="imgPath" />
+      <result column="filesuffix" property="fileSuffix" />
+   </resultMap>
+  
+   <!-- 获取备课夹内容列表(其中缩略图、文件后缀需要工具类继续处理) -->
+  <select id="getPrepareContentListByUserId" resultMap="viewPrepareContMap" > 	
+  	 select  id,title,resId,fromFlag,unifytype,size,timeline,time,imgpath,filesuffix from  (	 
+	    select  distinct  0 as id ,a.id as resId,a.name as title,a.createTime as time,1 as fromFlag,p.id as unifyTypeId
+			,p.MType as  unifyType,a.AssetSize as size,'' as timeline,a.AssetPath as imgPath ,REVERSE(LEFT(REVERSE(AssetPath),LOCATE('.',REVERSE(AssetPath))-1)) as fileSuffix,0 as orderIdx
+			from  j_prepare_content  t  
+			LEFT JOIN z_asset a on a.id = t.contId 
+			LEFT JOIN x_resourcetype p  on p.id = a.unifyTypeId		
+			LEFT JOIN j_lession_prepare  pre on  pre.id = t.preId
+			where t.flag = false  and t.contType in (1,9)
+			and a.flag =false and a.FileType = 'A'
+	        and pre.flag = false 	
+	      	and pre.userid = #{userId} 
+		  UNION ALL 
+			select distinct  0 as  id,z.Id as resId,z.title,z.CreateDT  as  time,0 as fromFlag,p.id as unifyTypeId
+			,p.MType as  unifyType,z.FSize as size,IFNULL(m.res_time,'') as  timeline,CONCAT(z.FPath,'/',z.Fname) as imgPath 
+	     ,REPLACE(FileExt,'.','') as fileSuffix,0 as orderIdx		
+			from  j_prepare_content  t  
+			LEFT JOIN z_resource  z on t.contId = z.Id
+			LEFT JOIN x_resourcetype p  on p.id = z.MType
+			LEFT JOIN z_res_medium m on m.res_code = z.ResCode
+			LEFT JOIN j_lession_prepare  pre on pre.id = t.preId
+			where t.flag = false  and t.contType in (2,10)
+			and z.flag = false 
+	    	and pre.flag = false 
+	    	and pre.userid = #{userId} 
+		UNION ALL  
+			select distinct   0 as id,r.id as resId,r.title,r.CreateDT as time ,fromFlag as fromFlag,p.id as unifyTypeId
+			,p.MType as unifyType,r.FSize as size,'' as timeline,r.fullpath as imgPath ,REVERSE(LEFT(REVERSE(fname),LOCATE('.',REVERSE(fname))-1)) as fileSuffix,0 as orderIdx
+			from  j_prepare_content  t  
+			LEFT JOIN z_districts_resource r on r.id = t.contId
+			LEFT JOIN x_resourcetype p on p.id = r.MType
+			LEFT JOIN j_lession_prepare  pre on pre.id = t.preId 
+			where t.flag = false  and t.contType in (11,12)
+			and r.flag = false 
+	   		and pre.flag = false   
+	    	and pre.userid = #{userId} 
+	        
+	)temp_result 
+	where  1 =1 
+	
+	<if test="unifyTypeId > 0">
+		and EXISTS ( select  id from x_resourcetype  where (id = #{unifyTypeId} or pid = #{unifyTypeId} )and flag =false and id = temp_result.unifyTypeId )
+	</if>
+	
+	<if test=" (fileFormat != '' and fileFormat != null and fileFormat != '全部' and fileFormat != 'all') ">
+		and EXISTS (select FormatCode from j_filetypedetail where flag = false  and FileFormat =#{fileFormat} and FormatCode = CONCAT('.',temp_result.filesuffix))
+	</if>
+	
+	ORDER BY time desc
+  	
+  </select>
+  
+  
+  
+  <select id="isPrepareContentExist" resultType="Boolean">
+  	select  count(id)>0 as flag from j_prepare_content  where flag = false and preid = #{prepareId} and contId = #{contId} and contType = #{contType} 
+  </select>
+  
+  
+  
+  
+  <insert id="copyPrepareContent">
+  	insert into j_prepare_content(createtime,preid,contid,conttype,orderidx)
+	select now(),#{targetPrepareId},contid,conttype,orderidx from j_prepare_content where preid = #{prepareId} and flag = false
+  </insert>
+  
+  
+  
+
+</mapper>

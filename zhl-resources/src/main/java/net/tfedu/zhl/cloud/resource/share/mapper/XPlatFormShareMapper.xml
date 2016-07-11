@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.tfedu.zhl.cloud.resource.share.dao.XPlatFormShareMapper">
+  <resultMap id="BaseResultMap" type="net.tfedu.zhl.cloud.resource.share.entity.XPlatFormShare">
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor>
+      <idArg column="id" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="studyCourseId" javaType="java.lang.String" jdbcType="VARCHAR" />
+      <arg column="sharedType" javaType="java.lang.Integer" jdbcType="INTEGER" />
+      <arg column="shareId" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="scope" javaType="java.lang.String" jdbcType="CHAR" />
+      <arg column="scopeId" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="userid" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="createTime" javaType="java.util.Date" jdbcType="TIMESTAMP" />
+      <arg column="clicks" javaType="java.lang.Integer" jdbcType="INTEGER" />
+      <arg column="quotes" javaType="java.lang.Integer" jdbcType="INTEGER" />
+      <arg column="downloads" javaType="java.lang.Integer" jdbcType="INTEGER" />
+      <arg column="flag" javaType="java.lang.Boolean" jdbcType="BIT" />
+      <arg column="sysResourceType" javaType="java.lang.Long" jdbcType="BIGINT" />
+    </constructor>
+  </resultMap>
+</mapper>

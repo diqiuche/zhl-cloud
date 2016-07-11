@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.tfedu.zhl.sso.users.dao.SRegisterMapper">
+  <resultMap id="registerMap" type="net.tfedu.zhl.sso.users.entity.SRegister">
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <constructor>
+      <idArg column="Id" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="CardId" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="RoleId" javaType="java.lang.Long" jdbcType="BIGINT" />
+      <arg column="Name" javaType="java.lang.String" jdbcType="CHAR" />
+      <arg column="Email" javaType="java.lang.String" jdbcType="CHAR" />
+      <arg column="RegisterTime" javaType="java.util.Date" jdbcType="TIMESTAMP" />
+      <arg column="NodeId" javaType="java.lang.Integer" jdbcType="INTEGER" />
+      <arg column="Flag" javaType="java.lang.Boolean" jdbcType="BIT" />
+      <arg column="reEndTime" javaType="java.util.Date" jdbcType="TIMESTAMP" />
+      <arg column="Pwd" javaType="byte[]" jdbcType="BINARY" />
+    </constructor>
+  </resultMap>
+  
+
+
+
+  
+  <update id="modifyPassword" > 
+  		update  s_register set pwd=#{1}  where id =#{0} 
+  </update>
+  
+  
+  <insert id="addRegister" parameterType="net.tfedu.zhl.sso.users.entity.SRegister" useGeneratedKeys="true" keyProperty="register.id">
+  	insert into s_register(cardid,roleid,name,pwd,email,registertime,nodeid,flag,reendtime)values(#{register.cardid},#{register.roleid},#{register.name},#{register.pwd},#{register.email},#{register.registertime},#{register.nodeid},#{register.flag},#{register.reendtime})
+  </insert>
+  
+  
+</mapper>
